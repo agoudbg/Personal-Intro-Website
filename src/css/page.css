@@ -7,25 +7,48 @@
     -moz-user-select: none;
     scroll-behavior: smooth;
     font-family: PingFangSC-Regular;
-    -webkit-tap-highlight-color:rgba(0,0,0,0)
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 body[transitioncolor], body[transitioncolor] *{
     transition: color 0.5s cubic-bezier(0, 1, 0.25, 1), background-color 0.5s, border 0.5s, box-shadow 0.5s!important;
 }
 body{
-    --header-icon-loading-bg: rgba(255, 255, 255, 0.575);
+    --header-icon-loading-bg:
+    rgba(255, 255, 255, 0.575);
     --bgcolor: #fff;
     --card-bgcolor: #fff;
     --card-frcolor: #000;
     --scroller-grey: #9b9b9b54;
-    --slug-border: #cbcbcb;
+    --slug-border: #5d5d5d;
+    --contact-button-bgcolor: #d3d3d338;
+    --a-color: #0080ff;
+}
+body[theme=dark]{
+    --header-icon-loading-bg:
+    rgba(255, 255, 255, 0.575);
+    --bgcolor: #000;
+    --card-bgcolor: #262626;
+    --card-frcolor: #fff;
+    --scroller-grey: #9b9b9b54;
+    --slug-border: #6b6b6b;
+    --contact-button-bgcolor: #74747438;
+    --a-color: #0080ff;
 }
 body{
     overflow: hidden;
     background-color: var(--bgcolor);
 }
-body[theme=dark]{
-    --bgcolor: #000;
+a{
+    color: var(--a-color);
+    text-decoration: none;
+}
+:focus-visible{
+    outline: 4px solid rgba(0,125,250,0.6);
+    outline-offset: 1px;
 }
 .pageBackground{
     position: fixed;
@@ -646,8 +669,9 @@ body[data-card-opened=true] .pageFooter{
 }
 .siteDetail .site .description{
     font-size: 16px;
-    margin-top: 0px;
+    margin-top: -2px;
     margin-bottom: 10px;
+    line-height: 1.5;
 }
 @media (min-width: 600px){
     .siteDetail .site{
@@ -725,4 +749,50 @@ body[data-card-opened=true] .pageFooter{
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 8;
     overflow: hidden;
+}
+.myMain{
+    height: calc(100% - 2em);
+}
+.myIntroPreview{
+    font-size: 1.03em;
+    line-height: 1.6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 100%;
+}
+.myIntroDetail{
+    font-size: 17px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+.contact{
+    display: inline-flex;
+    align-items: center;
+    flex-direction: row;
+    max-width: 100%;
+    margin: 0 .8em .8em 0;
+    height: 2.5em;
+    border-radius: 19em;
+    background-color: var(--contact-button-bgcolor);
+    color: var(--card-frcolor);
+    text-decoration: none;
+}
+.contact i{
+    display: block;
+    width: 2em;
+    height: 2em;
+    margin-left: .27em;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.contact p{
+    font-size: 1em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: break-all;
+    margin-left: 0.4em;
+    margin-right: .9em;
 }

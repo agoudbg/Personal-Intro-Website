@@ -120,7 +120,7 @@ echo_cr();
                                 <?php
                                 $blog_result = json_decode(curl_get($blog_api));
                                 foreach ($blog_result->data as $i => $blog_article) {
-                                    if($i>1) break;
+                                    if ($i > 1) break;
                                 ?>
                                     <div class="blog">
                                         <div class="title"><?php echo $blog_article->title; ?></div>
@@ -174,8 +174,11 @@ echo_cr();
                                 <span>关于</span>
                             </div>
                         </div>
-                        <div class="main">
-                         
+                        <div class="main myMain">
+                            <div class="myIntroPreview">
+                                <?php echo $about_text;
+                                ?>
+                            </div>
                         </div>
                     </div>
                     <div class="detailArea">
@@ -193,7 +196,21 @@ echo_cr();
                             </div>
                         </div>
                         <div class="main">
-                            
+                            <div class="myIntroDetail">
+                                <?php echo $about_text; ?>
+                            </div>
+                            <div class="contacts">
+                                <?php
+                                foreach ($about_contacts as $i => $about_contact) {
+                                ?>
+                                    <a class="contact" href="<?php echo $about_contact['link']; ?>" target="_blank">
+                                        <i style="background-image: url('/src/img/contactlogos/<?php echo $about_contact['id']; ?>.png');"></i>
+                                        <p><?php echo $about_contact['text']; ?></p>
+                                    </a>
+                                <?php
+                                }
+                                ?>
+                            </div>
                         </div>
                     </div>
                 </object>
@@ -272,7 +289,8 @@ echo_cr();
     </div>
     </div>
     <div class="pageFooter" id="pageFooter">
-        <p>Copyright <?php echo $site_header_name; ?>. All rights reserved.
+        <p>Copyright <?php echo $site_header_name; ?>. All rights reserved.</p>
+        <p><?php echo $site_footer; ?></p>
     </div>
     </p>
     <script src="./src/js/jquery.min.js"></script>

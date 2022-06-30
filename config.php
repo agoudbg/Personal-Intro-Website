@@ -18,8 +18,10 @@ $site_header_icon = "https://gravatar.junbo.wang/avatar/92f14fcd71bdc4008eb6d7f2
 $site_background_light = "$site_url/src/img/background_light.png";
 $site_background_dark = "$site_url/src/img/background_dark.png";
 
+$site_footer = '<a href="https://icp.gov.moe/?keyword=20225229" target="_blank">萌ICP备20225229号</a>';
+
 // 站点网站项目展示信息设置
-$websites_list = [
+$websites_list = array(
     array(
         "name" => "agou's Blog",
         "host" => "blog.agou.im",
@@ -41,30 +43,36 @@ $websites_list = [
         "host" => "nmteam.xyz",
         "url" => "https://nmteam.xyz?ref=agou.im",
         "icon" => "./src/img/sitelogos/nmteam.png",
-        "description" => "nm",
+        "description" => "我再说一遍，nm 是柠檬，绝对没有别的意思！",
         "show_in_slug" => 1
     ),
-    array(
-        "name" => "nmTeam",
-        "host" => "nmteam.xyz",
-        "url" => "https://nmteam.xyz?ref=agou.im",
-        "icon" => "./src/img/sitelogos/nmteam.png",
-        "description" => "nm",
-        "show_in_slug" => 1
-    ),
-    array(
-        "name" => "nmTeam",
-        "host" => "nmteam.xyz",
-        "url" => "https://nmteam.xyz?ref=agou.im",
-        "icon" => "./src/img/sitelogos/nmteam.png",
-        "description" => "nm",
-        "show_in_slug" => 0
-    )
-];;
+);
 
 $blog_api = "https://blog.agou.im/api/posts?showContent=false&pageSize=7&page=1";
 
-$friends_link = [
+$about_text = "Hi，我是 agou，一个人群中最不起眼，但闹起事来让人急眼的普通大学生。<br>
+平时就想写写代码水水群，但是真的不想学高数！<br>
+欢迎来订阅我的 Telegram 频道 <a href=\"https://t.me/bakadog\" target=_blank>@bakadog</a>，听我说骚话。";
+
+$about_contacts = array(
+    array(
+        "id" => "GitHub",
+        "link" => "https://github.com/agoudbg",
+        "text" => "GitHub @agoudbg"
+    ),
+    array(
+        "id" => "Telegram",
+        "link" => "https://t.me/agoudbg",
+        "text" => "Telegram @agoudbg"
+    ),
+    array(
+        "id" => "Twitter",
+        "link" => "https://twitter.com/agoudbg",
+        "text" => "Twitter @agoudbg"
+    ),
+);
+
+$friends_link = array(
     array(
         "name" => "Air's&nbsp;home",
         "host" => "zhiccc.net",
@@ -107,4 +115,4 @@ $friends_link = [
         "icon" => "https://cdn.cncn3.cn/webstatic/dec11a17ca998/logo.jpg",
         "description" => "一个热爱计算机的青年"
     )
-];
+);
