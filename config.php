@@ -88,6 +88,20 @@ $friends_link = array(
         "description" => "CodyNotFound&nbsp;der&nbsp;Blog"
     ),
     array(
+        "name" => "Hat's Blog",
+        "host" => "hatblog.me",
+        "url" => "https://hatblog.me",
+        "icon" => "https://hatblog.me/icons/icon-96x96.png",
+        "description" => "Just be happy"
+    ),
+    array(
+        "name" => "Revincx",
+        "host" => "revincx.icu",
+        "url" => "https://blog.revincx.icu",
+        "icon" => "https://cdn.jsdelivr.net/gh/Revincx/blog-assets@master/images/avatar.jpg",
+        "description" => "可爱就是正义~"
+    ),
+    array(
         "name" => "XYZ1024'&nbsp;Blog",
         "host" => "xyz1024.top",
         "url" => "https://xyz1024.top",

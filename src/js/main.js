@@ -18,7 +18,7 @@ if (window.location.hash.replace("#", "") != "") {
     openCard($(".card[data-cardid=" + cardId + "]")[0]);
 }
 
-function openCard(ele) {
+function openCard(ele, byHistory = false) {
     if ($("body").attr("data-ani-playing") == "true" || $(".pageDetails .card").length != 0) {
         if (byHistory) history.forward();
         return;
