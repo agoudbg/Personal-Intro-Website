@@ -39,6 +39,14 @@ $websites_list = array(
         "show_in_slug" => 1
     ),
     array(
+        "name" => "agou.rip",
+        "host" => "agou.rip",
+        "url" => "https://agou.im?ref=agou.im",
+        "icon" => "./src/img/sitelogos/blog.png",
+        "description" => "agou 的留言板~",
+        "show_in_slug" => 1
+    ),
+    array(
         "name" => "nmTeam",
         "host" => "nmteam.xyz",
         "url" => "https://nmteam.xyz?ref=agou.im",
@@ -100,6 +108,13 @@ $friends_link = array(
         "url" => "https://blog.revincx.icu",
         "icon" => "https://cdn.jsdelivr.net/gh/Revincx/blog-assets@master/images/avatar.jpg",
         "description" => "可爱就是正义~"
+    ),
+    array(
+        "name" => "SHIINA'S HOME",
+        "host" => "shiinafan.top",
+        "url" => "https://shiinafan.top/",
+        "icon" => "https://shiinafan.top/favicon.ico",
+        "description" => "这里是 Shiina 的小网站"
     ),
     array(
         "name" => "XYZ1024'&nbsp;Blog",
