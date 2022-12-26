@@ -1,4 +1,4 @@
-*{
+* {
     margin: 0;
     padding: 0;
     border: none;
@@ -7,18 +7,21 @@
     -moz-user-select: none;
     scroll-behavior: smooth;
     font-family: PingFangSC-Regular;
-    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     -webkit-text-size-adjust: 100%;
     -moz-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
 }
-body[transitioncolor], body[transitioncolor] *{
-    transition: color 0.5s cubic-bezier(0, 1, 0.25, 1), background-color 0.5s, border 0.5s, box-shadow 0.5s!important;
+
+body[transitioncolor],
+body[transitioncolor] * {
+    transition: color 0.5s cubic-bezier(0, 1, 0.25, 1), background-color 0.5s, border 0.5s, box-shadow 0.5s !important;
 }
-body{
+
+body {
     --header-icon-loading-bg:
-    rgba(255, 255, 255, 0.575);
+        rgba(255, 255, 255, 0.575);
     --bgcolor: #fff;
     --card-bgcolor: #fff;
     --card-frcolor: #000;
@@ -27,9 +30,10 @@ body{
     --contact-button-bgcolor: #d3d3d338;
     --a-color: #0080ff;
 }
-body[theme=dark]{
+
+body[theme=dark] {
     --header-icon-loading-bg:
-    rgba(255, 255, 255, 0.575);
+        rgba(255, 255, 255, 0.575);
     --bgcolor: #000;
     --card-bgcolor: #262626;
     --card-frcolor: #fff;
@@ -38,19 +42,23 @@ body[theme=dark]{
     --contact-button-bgcolor: #74747438;
     --a-color: #0080ff;
 }
-body{
+
+body {
     overflow: hidden;
     background-color: var(--bgcolor);
 }
-a{
+
+a {
     color: var(--a-color);
     text-decoration: none;
 }
-:focus-visible{
-    outline: 4px solid rgba(0,125,250,0.6);
+
+:focus-visible {
+    outline: 4px solid rgba(0, 125, 250, 0.6);
     outline-offset: 1px;
 }
-.pageBackground{
+
+.pageBackground {
     position: fixed;
     top: 0;
     bottom: 0;
@@ -62,10 +70,12 @@ a{
     background-position: center center;
     background-image: var(--lightbg);
 }
-body[theme=dark] .pageBackground{
+
+body[theme=dark] .pageBackground {
     background-image: var(--darkbg);
 }
-.pageHeader{
+
+.pageHeader {
     position: fixed;
     z-index: 1;
     top: 0;
@@ -73,10 +83,12 @@ body[theme=dark] .pageBackground{
     right: 0;
     transition: all 0.3s;
 }
-body[data-card-opened=true] .pageHeader{
+
+body[data-card-opened=true] .pageHeader {
     opacity: 0;
 }
-.pageHeader .info{
+
+.pageHeader .info {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -84,20 +96,23 @@ body[data-card-opened=true] .pageHeader{
     margin-top: 8vh;
     margin-bottom: 7vh;
 }
-.pageHeader .info i{
+
+.pageHeader .info i {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     background-color: var(--header-icon-loading-bg);
     background-size: 50px 50px;
 }
-.pageHeader .info p{
+
+.pageHeader .info p {
     margin-left: 10px;
     padding-bottom: 5px;
     font-size: 35px;
     color: var(--header-color);
 }
-.pageMain{
+
+.pageMain {
     position: fixed;
     top: 40px;
     bottom: 0;
@@ -110,11 +125,13 @@ body[data-card-opened=true] .pageHeader{
     overflow-y: overlay;
     transition: overflow-y 0s var(--ani-time);
 }
-.pageMain[data-behind=true]{
+
+.pageMain[data-behind=true] {
     overflow-y: hidden;
     transition: none;
 }
-.cards{
+
+.cards {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -122,78 +139,92 @@ body[data-card-opened=true] .pageHeader{
     margin: auto;
     /* transition: all 0.5s, display 0s 0s; */
 }
-.pageMain[data-behind=false] .cards{
+
+.pageMain[data-behind=false] .cards {
     transform: none;
     opacity: 1;
-    visibility: visible;   
+    visibility: visible;
     animation: pageMainCardsClosePositionCollect var(--ani-time) 0s;
 }
+
 @keyframes pageMainCardsClosePositionCollect {
-    0%{
+    0% {
         transform: scale(1);
         opacity: 0;
     }
-    1%{
+
+    1% {
         transform: scale(1);
         opacity: 0;
     }
-    2%{
+
+    2% {
         transform: scale(0.8);
         opacity: 0;
         visibility: hidden;
     }
-    80%{
+
+    80% {
         transform: none;
         opacity: 1;
-        overflow: auto;  
+        overflow: auto;
     }
 }
-.pageMain[data-behind=true] .cards{
+
+.pageMain[data-behind=true] .cards {
     transform: scale(0.8);
     opacity: 0;
     visibility: hidden;
     overflow: hidden;
     transition: all 0.8s 0.3s, overflow 0s 0.3s;
 }
-.pageMain .card{
+
+.pageMain .card {
     transition: height 0.5s;
     z-index: 1;
 }
-@media (max-width: 550px){
-    .cards{
+
+@media (max-width: 550px) {
+    .cards {
         padding: 0 7.4vw;
     }
-    .card{
+
+    .card {
         width: 100%;
         padding-bottom: 100%;
         margin-bottom: 4.89vw;
     }
 }
-@media (min-width: 550px) and (max-width: 1000px){
-    .cards{
+
+@media (min-width: 550px) and (max-width: 1000px) {
+    .cards {
         padding: 0 3.3vw;
         max-width: 600px;
     }
-    .card{
+
+    .card {
         width: 48.6%;
         padding-bottom: 48.6%;
         margin-bottom: 2.8%;
     }
 }
-@media (min-width: 1000px){
-    .cards{
+
+@media (min-width: 1000px) {
+    .cards {
         padding: 0 3.3vw 0 3.3vw;
         position: relative;
         top: 5vh;
         max-width: 1200px;
     }
-    .card{
+
+    .card {
         width: 24%;
         padding-bottom: 24%;
         margin-bottom: 1%;
     }
 }
-.card{
+
+.card {
     background-color: var(--card-bgcolor);
     border-radius: 4.6%;
     height: 0;
@@ -202,54 +233,65 @@ body[data-card-opened=true] .pageHeader{
     overflow: hidden;
     color: var(--card-frcolor);
 }
-.cardHeader{
-}
-.cardHeader .cardName{
-}
-.cardName svg{
+
+.cardHeader {}
+
+.cardHeader .cardName {}
+
+.cardName svg {
     height: 19em;
     fill: var(--card-frcolor);
     margin-top: -2em;
     margin-bottom: -6em;
     margin-right: 4em;
 }
-.cardName span{
+
+.cardName span {
     font-size: 10em;
     font-weight: bold;
 }
-.card[data-hidden=true]{
+
+.card[data-hidden=true] {
     opacity: 0;
     visibility: hidden;
     animation: cardHidden var(--ani-time);
 }
+
 @keyframes cardHidden {
-    0%{
+    0% {
         transform: scale(1);
         opacity: 1;
         visibility: visible;
     }
-    14%{
+
+    14% {
         transform: scale(0.95);
         opacity: 1;
         visibility: visible;
     }
-    17%{
+
+    17% {
         transform: scale(0.95);
         opacity: 1;
         visibility: hidden;
     }
-    100%{
+
+    100% {
         visibility: hidden;
     }
 }
-.card[data-cardmode=preview]{
+
+.card[data-cardmode=preview] {
     cursor: pointer;
 }
-.card[data-cardmode=preview] .detailArea, .card[data-cardmode=detail] .previewArea{
+
+.card[data-cardmode=preview] .detailArea,
+.card[data-cardmode=detail] .previewArea {
     visibility: hidden;
     transition: visibility var(--ani-time);
-} 
-.card .previewArea{
+}
+
+.card .previewArea {
     position: absolute;
     z-index: 1;
     top: 6%;
@@ -258,127 +300,156 @@ body[data-card-opened=true] .pageHeader{
     right: 6%;
     overflow: hidden;
 }
-.card[data-anitype=opening] .previewArea{
+
+.card[data-anitype=opening] .previewArea {
     animation: cardPreviewAreaOpening var(--ani-time);
 }
+
 @keyframes cardPreviewAreaOpening {
-    0%{
+    0% {
         opacity: 0;
         visibility: hidden;
     }
-    5%{
+
+    5% {
         opacity: 1;
         visibility: visible;
     }
-    70%{
+
+    70% {
         opacity: 0;
         visibility: hidden;
     }
-    100%{
+
+    100% {
         opacity: 0;
         visibility: hidden;
     }
 }
-.card[data-anitype=closing] .previewArea{
+
+.card[data-anitype=closing] .previewArea {
     animation: cardPreviewAreaClosing var(--ani-time);
 }
+
 @keyframes cardPreviewAreaClosing {
-    10%{
+    10% {
         opacity: 0;
         visibility: hidden;
         display: none;
     }
-    35%{
+
+    35% {
         opacity: 0;
         visibility: hidden;
         display: none;
     }
-    100%{
+
+    100% {
         opacity: 1;
         visibility: visible;
     }
 }
-.card[data-anitype=opening] .detailArea .main{
+
+.card[data-anitype=opening] .detailArea .main {
     animation: cardDetailAreaOpening var(--ani-time);
 }
+
 @keyframes cardDetailAreaOpening {
-    0%{
+    0% {
         opacity: 0;
         display: none;
     }
-    25%{
+
+    25% {
         opacity: 0;
         display: none;
     }
-    90%{
+
+    90% {
         opacity: 1;
         visibility: visible;
     }
 }
-.card[data-anitype=closing] .detailArea .main{
+
+.card[data-anitype=closing] .detailArea .main {
     animation: cardDetailAreaClosing var(--ani-time);
 }
+
 @keyframes cardDetailAreaClosing {
-    10%{
+    10% {
         opacity: 1;
         visibility: visible;
     }
-    75%{
+
+    75% {
         opacity: 0;
         display: none;
     }
-    100%{
+
+    100% {
         opacity: 0;
         display: none;
     }
 }
-.card .previewArea .cardHeader{
+
+.card .previewArea .cardHeader {
     margin-bottom: 6em;
 }
-.card .previewArea .cardHeader .cardName svg{
+
+.card .previewArea .cardHeader .cardName svg {
     transform: scale(0.8);
     margin-right: -1em;
 }
-.card .previewArea .cardHeader .close{
+
+.card .previewArea .cardHeader .close {
     display: none;
 }
-.card .previewArea .cardHeader .cardName{
+
+.card .previewArea .cardHeader .cardName {
     text-align: left;
 }
-.card .previewArea .main{
+
+.card .previewArea .main {
     width: 100%;
     position: absolute;
     font-size: 8em;
     line-height: 2.0;
     text-align: left;
 }
-.card[data-cardmode=detail]{
+
+.card[data-cardmode=detail] {
     position: fixed;
     z-index: 199;
     transition: all 0.5s;
     padding: 0;
 }
-.card .detailArea{
+
+.card .detailArea {
     position: absolute;
     z-index: 2;
     transition: all 0.5s;
 }
-.card .detailArea .cardHeader{
+
+.card .detailArea .cardHeader {
     transition: all 0.5s;
 }
-.cardHeader .close{
+
+.cardHeader .close {
     position: absolute;
     left: 0;
     background: none;
     cursor: pointer;
 }
-.card[data-anitype=opening] .close{
+
+.card[data-anitype=opening] .close {
     animation: cardDetailAreaOpening var(--ani-time);
 }
-.card[data-anitype=closing] .close{
+
+.card[data-anitype=closing] .close {
     animation: cardDetailAreaClosing var(--ani-time);
 }
-.cardHeader .close svg{
+
+.cardHeader .close svg {
     position: absolute;
     top: 10%;
     bottom: 10%;
@@ -386,14 +457,17 @@ body[data-card-opened=true] .pageHeader{
     right: 10%;
     fill: var(--card-frcolor);
 }
-.card[data-anitype=opening] .detailArea .cardHeader .cardName{
+
+.card[data-anitype=opening] .detailArea .cardHeader .cardName {
     animation: cardDetailNameOpening var(--ani-time);
 }
-.card[data-anitype=closing] .detailArea .cardHeader .cardName{
+
+.card[data-anitype=closing] .detailArea .cardHeader .cardName {
     animation: cardDetailNameClosing var(--ani-time);
 }
-@media(min-width: 700px){
-    .card[data-cardmode=detail]{
+
+@media(min-width: 700px) {
+    .card[data-cardmode=detail] {
         top: 10%;
         bottom: 10%;
         left: 10%;
@@ -402,68 +476,81 @@ body[data-card-opened=true] .pageHeader{
         height: 80vh;
         border-radius: 3vh;
     }
-    .card .detailArea{
+
+    .card .detailArea {
         top: 30px;
         bottom: 20px;
         left: 4%;
         right: 4%;
     }
-    .card .detailArea .cardHeader{
+
+    .card .detailArea .cardHeader {
         font-size: 2.4px;
     }
-    .cardHeader .close{
+
+    .cardHeader .close {
         top: -.09em;
         width: 3em;
         height: 3em;
     }
+
     @keyframes cardDetailNameOpening {
-        0%{
+        0% {
             opacity: 0;
             display: none;
         }
-        15%{
+
+        15% {
             position: relative;
             left: -45%;
             top: -15px;
         }
-        25%{
+
+        25% {
             opacity: 0;
             display: none;
         }
-        50%{        
+
+        50% {
             opacity: 1;
         }
-        70%{
+
+        70% {
             position: relative;
             left: 0;
             top: 0;
             opacity: 1;
         }
     }
+
     @keyframes cardDetailNameClosing {
-        0%{
+        0% {
             position: relative;
             left: 0;
             top: 0;
             opacity: 1;
         }
-        56%{
+
+        56% {
             opacity: 0;
             display: none;
         }
-        85%{
+
+        85% {
             position: relative;
             left: -45%;
             top: -15px;
         }
-        100%{
+
+        100% {
             opacity: 0;
             display: none;
         }
     }
 }
-@media(max-width: 700px){
-    .card[data-cardmode=detail]{
+
+@media(max-width: 700px) {
+    .card[data-cardmode=detail] {
         top: 40px;
         bottom: 6%;
         left: 6%;
@@ -473,62 +560,74 @@ body[data-card-opened=true] .pageHeader{
         border-radius: 2vw;
         overflow: hidden;
     }
-    .card .detailArea{
+
+    .card .detailArea {
         top: 20px;
         bottom: 0px;
         left: 0%;
         right: 0%;
         margin: 0 4%;
     }
-    .card .detailArea .cardHeader{
+
+    .card .detailArea .cardHeader {
         font-size: 2px;
     }
-    .cardHeader .close{
+
+    .cardHeader .close {
         top: 0em;
         width: 2.5em;
         height: 2.5em;
     }
+
     @keyframes cardDetailNameOpening {
-        0%{
+        0% {
             opacity: 0;
         }
-        15%{
+
+        15% {
             position: relative;
             left: -45%;
             top: 30px;
         }
-        25%{
+
+        25% {
             opacity: 0;
         }
-        50%{        
+
+        50% {
             opacity: 1;
         }
-        70%{
+
+        70% {
             position: relative;
             left: 0;
             top: 0;
             opacity: 1;
         }
     }
+
     @keyframes cardDetailNameClosing {
-        0%{
+        0% {
             position: relative;
             left: 0;
             top: 0;
             opacity: 1;
         }
-        85%{
+
+        85% {
             position: relative;
             left: -45%;
             top: 30px;
             opacity: 0;
         }
-        100%{
+
+        100% {
             opacity: 0;
         }
     }
 }
-.card .detailArea .main{
+
+.card .detailArea .main {
     position: absolute;
     top: 50px;
     bottom: 0;
@@ -539,7 +638,8 @@ body[data-card-opened=true] .pageHeader{
     overflow: auto;
     overflow: overlay;
 }
-.pageFooter{
+
+.pageFooter {
     display: none;
     position: fixed;
     padding-bottom: 5vh;
@@ -549,39 +649,47 @@ body[data-card-opened=true] .pageHeader{
     z-index: 97;
     transition: bottom 0.3s, opacity 0.5s;
 }
-.pageFooter *{
+
+.pageFooter * {
     color: var(--header-color);
     font-size: 16px;
     opacity: 0.9;
     text-align: center;
 }
-body[data-card-opened=true] .pageFooter{
+
+body[data-card-opened=true] .pageFooter {
     opacity: 0;
 }
+
 ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
 }
+
 ::-webkit-scrollbar-thumb {
     border-radius: 10px;
     background: var(--scroller-grey);
 }
+
 ::-webkit-scrollbar-track {
     border-radius: 10px;
     width: 0;
     opacity: 0;
 }
+
 /* SiteSlug */
-.siteSlug{
+.siteSlug {
     display: flex;
     flex-direction: column;
 }
-.siteSlug .site{
+
+.siteSlug .site {
     display: flex;
     flex-direction: row;
     margin: .05em 0 .05em 0;
 }
-.siteSlug .site i{
+
+.siteSlug .site i {
     width: 3em;
     height: 3em;
     background-size: 3em 3em;
@@ -590,7 +698,8 @@ body[data-card-opened=true] .pageFooter{
     flex-grow: 0;
     flex-shrink: 0;
 }
-.siteSlug .site .text{
+
+.siteSlug .site .text {
     flex-grow: 1;
     padding-left: .1em;
     white-space: nowrap;
@@ -598,10 +707,12 @@ body[data-card-opened=true] .pageFooter{
     overflow: hidden;
     word-break: break-all;
 }
-.siteSlug .site:not(:last-child) .text{
+
+.siteSlug .site:not(:last-child) .text {
     border-bottom: .1em solid var(--slug-border);
 }
-.siteSlug .site .name{
+
+.siteSlug .site .name {
     font-size: 1.03em;
     font-weight: bold;
     margin-top: 0.06em;
@@ -610,7 +721,8 @@ body[data-card-opened=true] .pageFooter{
     overflow: hidden;
     word-break: break-all;
 }
-.siteSlug .site .description{
+
+.siteSlug .site .description {
     font-size: 0.9em;
     margin-top: -0.4em;
     margin-bottom: 0.2em;
@@ -619,8 +731,9 @@ body[data-card-opened=true] .pageFooter{
     overflow: hidden;
     word-break: break-all;
 }
+
 /* siteDetail */
-.siteDetail{
+.siteDetail {
     display: flex;
     width: 100%;
     flex-direction: row;
@@ -630,17 +743,20 @@ body[data-card-opened=true] .pageFooter{
     overflow-y: auto;
     overflow-y: overlay;
 }
-.siteDetail a{
+
+.siteDetail a {
     color: var(--card-frcolor);
-    text-decoration: none!important;
+    text-decoration: none !important;
 }
-.siteDetail .site{
+
+.siteDetail .site {
     display: flex;
     flex-direction: row;
     width: 100%;
     margin: 10px 2px;
 }
-.siteDetail .site i{
+
+.siteDetail .site i {
     width: 76px;
     height: 76px;
     background-size: cover;
@@ -649,43 +765,51 @@ body[data-card-opened=true] .pageFooter{
     flex-grow: 0;
     flex-shrink: 0;
 }
-.siteDetail .site .text{
+
+.siteDetail .site .text {
     flex-grow: 1;
     padding-left: .1em;
 }
-.siteDetail .site:not(:last-child) .text{
+
+.siteDetail .site:not(:last-child) .text {
     /* border-bottom: .1em solid var(--slug-border); */
 }
-.siteDetail .site .name{
+
+.siteDetail .site .name {
     font-size: 22px;
     font-weight: bold;
     margin-top: 3px;
 }
-.siteDetail .site .url{
+
+.siteDetail .site .url {
     font-size: 14px;
     margin-top: 4px;
     opacity: 0.7;
     margin-bottom: 6px;
 }
-.siteDetail .site .description{
+
+.siteDetail .site .description {
     font-size: 16px;
     margin-top: -2px;
     margin-bottom: 10px;
     line-height: 1.5;
 }
-@media (min-width: 600px){
-    .siteDetail .site{
+
+@media (min-width: 600px) {
+    .siteDetail .site {
         display: flex;
         flex-direction: row;
         width: 49%;
     }
 }
+
 /* Blog */
-.blogSlug{
+.blogSlug {
     display: flex;
     flex-direction: column;
 }
-.blogSlug .blog{
+
+.blogSlug .blog {
     display: flex;
     flex-direction: column;
     margin: 0 0 0.37em 0;
@@ -693,10 +817,12 @@ body[data-card-opened=true] .pageFooter{
     line-height: 1.4;
     height: 7.2em;
 }
-.blogSlug .blog:not(:last-child){
+
+.blogSlug .blog:not(:last-child) {
     border-bottom: .1em solid var(--slug-border);
 }
-.blogSlug .blog .title{
+
+.blogSlug .blog .title {
     font-size: 1.03em;
     font-weight: bold;
     margin-top: 0.06em;
@@ -707,7 +833,8 @@ body[data-card-opened=true] .pageFooter{
     -webkit-line-clamp: 2;
     overflow: hidden;
 }
-.blogSlug .blog .slug{
+
+.blogSlug .blog .slug {
     font-size: 0.9em;
     margin-top: 0em;
     margin-bottom: 0em;
@@ -716,26 +843,31 @@ body[data-card-opened=true] .pageFooter{
     -webkit-line-clamp: 4;
     overflow: hidden;
 }
-.blogSlug .blog .slug img{
+
+.blogSlug .blog .slug img {
     display: none;
 }
-.blogDetail{
+
+.blogDetail {
     display: flex;
     flex-direction: column;
 }
-.blogDetail .blog{
+
+.blogDetail .blog {
     display: flex;
     flex-direction: column;
-    margin: 0  0.2em 0.37em  0.2em;
+    margin: 0 0.2em 0.37em 0.2em;
     padding-bottom: .37em;
     line-height: 1.7;
     text-decoration: none;
     color: var(--card-frcolor);
 }
-.blogDetail .blog:not(:last-child){
+
+.blogDetail .blog:not(:last-child) {
     /* border-bottom: 1.3px solid var(--slug-border); */
 }
-.blogDetail .blog .title{
+
+.blogDetail .blog .title {
     font-size: 1.13em;
     font-weight: bold;
     margin-top: 0.06em;
@@ -745,7 +877,8 @@ body[data-card-opened=true] .pageFooter{
     -webkit-line-clamp: 2;
     overflow: hidden;
 }
-.blogDetail .blog .slug{
+
+.blogDetail .blog .slug {
     font-size: 0.9em;
     margin-top: 0em;
     margin-bottom: 0em;
@@ -754,22 +887,26 @@ body[data-card-opened=true] .pageFooter{
     -webkit-line-clamp: 8;
     overflow: hidden;
 }
-.myMain{
+
+.myMain {
     height: calc(100% - 2em);
 }
-.myIntroPreview{
+
+.myIntroPreview {
     font-size: 1.03em;
     line-height: 1.6;
     overflow: hidden;
     text-overflow: ellipsis;
     max-height: 100%;
 }
-.myIntroDetail{
+
+.myIntroDetail {
     font-size: 17px;
     line-height: 1.6;
     margin-bottom: 20px;
 }
-.contact{
+
+.contact {
     display: inline-flex;
     align-items: center;
     flex-direction: row;
@@ -781,7 +918,8 @@ body[data-card-opened=true] .pageFooter{
     color: var(--card-frcolor);
     text-decoration: none;
 }
-.contact i{
+
+.contact i {
     display: block;
     width: 2em;
     height: 2em;
@@ -791,7 +929,8 @@ body[data-card-opened=true] .pageFooter{
     border-radius: 50%;
     flex-shrink: 0;
 }
-.contact p{
+
+.contact p {
     font-size: 1em;
     overflow: hidden;
     text-overflow: ellipsis;
