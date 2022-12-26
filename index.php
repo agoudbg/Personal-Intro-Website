@@ -124,7 +124,7 @@ echo_cr();
                                 ?>
                                     <div class="blog">
                                         <div class="title"><?php echo $blog_article->title; ?></div>
-                                        <div class="slug"><?php echo $blog_article->text; ?></div>
+                                        <div class="slug markdownContent"><?php echo $blog_article->text; ?></div>
                                     </div>
                                 <?php
                                 }
@@ -153,7 +153,7 @@ echo_cr();
                                 ?>
                                     <a class="blog" href="<?php echo $blog_article->permalink; ?>" target="_blank">
                                         <div class="title"><?php echo $blog_article->title; ?></div>
-                                        <div class="slug"><?php echo $blog_article->text; ?></div>
+                                        <div class="slug markdownContent"><?php echo $blog_article->text; ?></div>
                                     </a>
                                 <?php
                                 }
@@ -294,6 +294,7 @@ echo_cr();
     </div>
     </p>
     <script src="./src/js/jquery.min.js"></script>
+    <script src="./src/js/marked.min.js"></script>
     <script src="./src/js/main.js"></script>
 </body>
 

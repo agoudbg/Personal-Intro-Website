@@ -18,6 +18,12 @@ if (window.location.hash.replace("#", "") != "") {
     openCard($(".card[data-cardid=" + cardId + "]")[0]);
 }
 
+$('document').ready(function () {
+    $(".markdownContent").each(function () {
+        $(this).html(marked.parse($(this).html().replace(/\\n/g, "  \n")));
+    });
+});
+
 function openCard(ele, byHistory = false) {
     if ($("body").attr("data-ani-playing") == "true" || $(".pageDetails .card").length != 0) {
         if (byHistory) history.forward();

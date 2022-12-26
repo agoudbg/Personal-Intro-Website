@@ -701,6 +701,7 @@ body[data-card-opened=true] .pageFooter{
     font-weight: bold;
     margin-top: 0.06em;
     flex-grow: 1;
+    flex-shrink: 0;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -714,6 +715,9 @@ body[data-card-opened=true] .pageFooter{
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 4;
     overflow: hidden;
+}
+.blogSlug .blog .slug img{
+    display: none;
 }
 .blogDetail{
     display: flex;
