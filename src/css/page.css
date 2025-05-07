@@ -137,6 +137,7 @@ body[data-card-opened=true] .pageHeader {
     justify-content: space-between;
     flex-wrap: wrap;
     margin: auto;
+    will-change: contents;
     /* transition: all 0.5s, display 0s 0s; */
 }
 
@@ -232,6 +233,7 @@ body[data-card-opened=true] .pageHeader {
     flex-grow: 0;
     overflow: hidden;
     color: var(--card-frcolor);
+    will-change: contents;
 }
 
 .cardHeader {}
