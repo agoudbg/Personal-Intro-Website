@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "personal-info-website",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,9 +17,15 @@
     "@nuxt/image": "1.10.0",
     "@nuxt/scripts": "0.11.5",
     "@unhead/vue": "^2.0.0-rc.8",
+    "canvas": "^3.1.0",
     "eslint": "^9.0.0",
     "nuxt": "^3.16.2",
+    "scroll-slides": "^0.2.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@iconify-json/material-symbols": "^1.2.20",
+    "sass-embedded": "^1.86.2"
   }
 }

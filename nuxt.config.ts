@@ -10,5 +10,12 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/image',
     '@nuxt/scripts'
-  ]
-})
+  ],
+  build: {
+    transpile: ['scroll-slides'],
+  },
+
+  css: ['./assets/theme.scss', './assets/basis.scss'],
+
+  ssr: false,
+});
