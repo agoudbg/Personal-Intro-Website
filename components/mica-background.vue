@@ -1,6 +1,13 @@
 <script lang="ts" setup>
 import { blurred, isSafari } from '#imports';
 
+const props = defineProps({
+  opacity: {
+    type: Number,
+    default: 0.2,
+  },
+});
+
 const id = ref(Math.random().toString(36).substring(2, 15));
 
 const transition = ref(false);
@@ -72,7 +79,16 @@ onBeforeUnmount(() => {
   }
 });
 
-watch(blurred.value, () => {
+// Convert Safari opacity
+const safariOpacity = computed(() => {
+  if (!isSafari.value) return 0;
+  // convert to 16-bit hex
+  const hex = Math.round((1 - props.opacity) * 255).toString(16).padStart(2, '0');
+  return `#ffffff${hex}`;
+});
+
+watch(blurredUpdateDate, () => {
+  console.log('watch blurredUpdateDate', blurredUpdateDate.value);
   updatePosition();
 });
 
@@ -80,7 +96,7 @@ watch(blurred.value, () => {
 
 <template>
   <div :class="`micaBackground ${isSafari ? 'safari' : ''}`" :id="id">
-    <img v-if="!isSafari" :class="`backgroundImage ${transition ? 'transition' : ''}`" :src="blurred.src" />
+    <img v-if="!isSafari" :class="`backgroundImage ${transition ? 'transition' : ''}`" :src="blurred.src">
   </div>
 </template>
 
@@ -93,16 +109,18 @@ watch(blurred.value, () => {
   z-index: 0;
 
   &.safari {
-    background-color: var(--mica-safari-background-color);
+    background-color: v-bind(safariOpacity);
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
   }
 
   .backgroundImage {
     position: absolute;
-    top: v-bind(top);
-    left: v-bind(left);
-    opacity: 0.2;
+    top: min(max(v-bind(top), -100vh), 100vh);
+    left: min(max(v-bind(left), -100vw), 100vw);
+    width: 100vw;
+    height: 100vh;
+    opacity: v-bind(opacity);
     z-index: 0;
 
     &.transition {

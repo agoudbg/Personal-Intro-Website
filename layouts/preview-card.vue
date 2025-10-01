@@ -32,7 +32,9 @@ const link = computed(() => {
           <h2>{{ pageTitle }}</h2>
         </div>
       </div>
-      <slot />
+      <div class="slot">
+        <slot />
+      </div>
     </div>
   </NuxtLink>
 </template>
@@ -47,7 +49,7 @@ const link = computed(() => {
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  border-radius: 10px;
+  border-radius: 7.5%;
   box-shadow: var(--preview-card-box-shadow);
   transition: transform 0.3s ease;
   overflow: hidden;
@@ -73,12 +75,17 @@ const link = computed(() => {
     .title {
       display: flex;
       align-items: center;
-      margin-bottom: 10px;
+      margin: 10px;
+      flex-grow: 0;
 
       .title-text {
         margin-left: 10px;
         font-size: v-bind(cardRem);
       }
+    }
+
+    .slot {
+      flex-grow: 1;
     }
   }
 }

@@ -42,7 +42,7 @@ const calculateSpacerHeader = () => {
   spacerHeaderScalePercent.value = maxScalePercent - (scrollPercent * (maxScalePercent - minScalePercent));
   spacerHeaderTopOffset.value = scrollPercentRaw > 1 ?
     `-${(1 - scrollPercentRaw) * 50}px`
-    : `${(1 - scrollPercent) * Math.min(10, Number(cardSize.value.replace('px', '')) / 150)}px`;
+    : `${(1 - scrollPercent) * Math.min(16, Number(cardSize.value.replace('px', '')) / 150)}px`;
 };
 
 onMounted(() => {
@@ -65,6 +65,7 @@ const animationCard = ref<Component | undefined>(undefined);
 const router = useRouter();
 
 router.beforeEach(async (to, from) => {
+  console.log('#routers');
   await routerChange('b', to, from);
 });
 
@@ -85,7 +86,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
   if (duringCardAnimation.value) {
     // await the animation after the current one
     await new Promise((resolve) => {
-      setTimeout(resolve, currentCardAnimationEndAt.value - Date.now());
+      setTimeout(resolve, currentCardAnimationEndAt.value - Date.now() + 200);
     });
   }
 
@@ -98,7 +99,10 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     && !(isClose && e === 'b')
   ) return;
 
-  const animationTime = isClose ? 1500 : 1500;
+  const animationTime = isClose ? 1000 : 900;
+  const animationTimingFunction = isClose
+    ? 'cubic-bezier(0.77, 0, 0.175, 1)'
+    : 'cubic-bezier(0.77, 0, 0.175, 1)';
 
   const cardName = isClose ? from.name : to.name;
   switch (cardName) {
@@ -357,23 +361,23 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       }
 
       .animation-card-container .card {
-        animation: animationCard ${animationTime}ms ease-in-out forwards;
+        animation: animationCard ${animationTime}ms ${animationTimingFunction} forwards;
       }
 
       .animation-card-container .card .card-content {
-        animation: animationCardContent ${animationTime}ms ease-in-out forwards;
+        animation: animationCardContent ${animationTime}ms ${animationTimingFunction} forwards;
       }
 
       .detail-container {
-        animation: detailContainer ${animationTime}ms ease-in-out forwards;
+        animation: detailContainer ${animationTime}ms ${animationTimingFunction} forwards;
       }
 
       .detail-container .detail-nuxt-page .content {
-        animation: detailContainerContent ${animationTime}ms ease-in-out forwards;
+        animation: detailContainerContent ${animationTime}ms ${animationTimingFunction} forwards;
       }
 
       .slide-item .card[href*="${isClose ? from.path : to.path}"] {
-        animation: originalPreviewCard ${animationTime}ms ease-in-out forwards;
+        animation: originalPreviewCard ${animationTime}ms ${animationTimingFunction} forwards;
       }`;
 
 
@@ -457,7 +461,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     <div :class="`index m-${slideMode} ${router.currentRoute.value.name !== 'index' ? 'hide' : ''}`">
       <div class="background-image" :style="{ backgroundImage: `url(${backgroundImage})` }" />
       <div :class="`index-header-box ${showSpacerHeader ? '' : 'show'} ${slideMode}`">
-        <div :class="`backdrop ${showHeaderBackdrop ? 'show' : ''}`" />
+        <HeaderBlurBackground :class="`backdrop`" :show="showHeaderBackdrop" :opacity="1" />
         <IndexHeader class="index-header" />
       </div>
       <div class="slider-box">
@@ -555,11 +559,11 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  transition: border-radius 0.4s, transform 0.4s;
+  transition: border-radius 0.6s, transform 0.6s;
 
   &.m-0.hide,
   &.m-1.hide {
-    border-radius: 7px;
+    border-radius: 14px;
     transform: scale(0.96);
   }
 
@@ -580,7 +584,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     top: 0;
     left: 0;
     width: 100vw;
-    padding: 5px 0;
+    padding: 8px 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -597,15 +601,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       left: 0;
       width: 100%;
       height: 100%;
-      backdrop-filter: blur(10px) brightness(0.96);
-      -webkit-backdrop-filter: blur(10px) brightness(0.96);
-      opacity: 0;
-      transition: opacity 0.3s;
       z-index: -1;
-
-      &.show {
-        opacity: 1;
-      }
     }
   }
 
@@ -624,7 +620,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       width: v-bind(cardSize);
       height: v-bind(cardSize);
       margin: calc(v-bind(cardSize) / 20) auto;
-      transition: opacity 0.2s, visibility 0s;
+      transition: opacity 0.4s, visibility 0s;
 
       &.hide {
         pointer-events: none;
@@ -650,12 +646,12 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     }
 
     &.hide {
-      // transform: scale(calc(1 / 0.96));
+      // transform: scale(calc(0.96));
 
       .slide-item {
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.2s, visibility 0s 0.2s;
+        transition: opacity 0.4s, visibility 0s 0.4s;
       }
     }
 
@@ -708,7 +704,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     padding: 0;
     z-index: 99;
     overflow: hidden;
-    border-radius: 10px 10px 0 0;
+    border-radius: 20px 20px 0 0;
     transition: all 0.4s;
     pointer-events: all;
 
@@ -722,7 +718,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       top: 50%;
       width: 700px;
       height: min(800px, calc(100vh - 100px));
-      border-radius: 10px;
+      border-radius: 20px;
     }
 
     .detail-nuxt-page {

@@ -2,7 +2,8 @@
 
 import { createCanvas, loadImage } from 'canvas';
 
-export const blurred = ref(new Image());
+export const blurred = reactive(new Image());
+export const blurredUpdateDate = ref(0);
 
 function updateBlurredImage() {
     // if (isSafari.value) return;
@@ -35,8 +36,11 @@ function updateBlurredImage() {
         ctx.drawImage(image, 0, 0, width, height, (clientWidth - newWidth) / 2, (clientHeight - newHeight) / 2, newWidth, newHeight);
 
         // save blurred image
-        blurred.value.src = canvas.toDataURL();
+        blurred.src = canvas.toDataURL();
         console.log('Blurred image loaded');
+
+        // update date
+        blurredUpdateDate.value = Date.now();
     });
 }
 

@@ -44,7 +44,7 @@ onBeforeUnmount(() => {
   <div :class="`detail m-${slideMode}`">
     <MicaBackground />
     <div :class="`header`">
-      <div :class="`backdrop ${showBackdrop ? 'show' : ''}`" />
+      <HeaderBlurBackground :class="`backdrop`" :show="showBackdrop" />
       <div class="title">
         {{ pageTitle }}
       </div>
@@ -108,16 +108,6 @@ onBeforeUnmount(() => {
       left: 0;
       width: 100%;
       height: 100%;
-      opacity: 0;
-      background: #ffffffe4;
-      box-shadow: 0 2px 5px #00000016;
-      transition: opacity 0.1s;
-    }
-
-    .backdrop.show {
-      opacity: 1;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
     }
   }
 
@@ -125,6 +115,7 @@ onBeforeUnmount(() => {
     z-index: 98;
     width: 100%;
     height: 100%;
+    padding: 70px 20px 20px 20px;
     overflow: auto;
 
     &::-webkit-scrollbar {
