@@ -2,7 +2,7 @@
 
 import { createCanvas, loadImage } from 'canvas';
 
-export const blurred = reactive(new Image());
+export const blurred = ref(new Image());
 export const blurredUpdateDate = ref(0);
 
 function updateBlurredImage() {
@@ -36,7 +36,7 @@ function updateBlurredImage() {
         ctx.drawImage(image, 0, 0, width, height, (clientWidth - newWidth) / 2, (clientHeight - newHeight) / 2, newWidth, newHeight);
 
         // save blurred image
-        blurred.src = canvas.toDataURL();
+        blurred.value.src = canvas.toDataURL();
         console.log('Blurred image loaded');
 
         // update date

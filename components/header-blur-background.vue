@@ -13,7 +13,7 @@ const props = defineProps({
 
 <template>
     <div :class="`header-blur-background ${props.show ? 'show' : ''}`">
-        <MicaBackground class="background" :opacity="props.opacity" />
+        <MicaBackground class="background" :opacity="props.opacity" :force-mica-mode="true" />
         <div class="aria aria0" />
         <div class="aria aria1" />
         <div class="aria aria2" />

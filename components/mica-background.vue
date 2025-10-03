@@ -1,21 +1,25 @@
 <script lang="ts" setup>
-import { blurred, isSafari } from '#imports';
+import { blurred, isSafari as isSafariRef } from '#imports';
 
 const props = defineProps({
   opacity: {
     type: Number,
     default: 0.2,
   },
+  forceMicaMode: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const id = ref(Math.random().toString(36).substring(2, 15));
 
-const transition = ref(false);
+const isSafari = computed(() => {
+  return isSafariRef.value /* && !props.forceMicaMode */;
+});
 
 const top = ref('0px');
 const left = ref('0px');
-
-console.log('isSa', isSafari.value);
 
 const updatePosition = () => {
   if (isSafari.value) return;
@@ -28,6 +32,8 @@ const updatePosition = () => {
 
   top.value = `-${elementTop}px`;
   left.value = `-${elementLeft}px`;
+
+  console.log('updatePosition', { top: top.value, left: left.value });
 };
 
 updatePosition();
@@ -38,6 +44,11 @@ const observer = new ResizeObserver(() => {
 });
 
 
+// watch window resize
+window.addEventListener('resize', () => {
+  updatePosition();
+});
+
 // watch element position change
 onMounted(() => {
   if (isSafari.value) return;
@@ -47,10 +58,6 @@ onMounted(() => {
   if (element) {
     observer.observe(element);
   }
-
-  setTimeout(() => {
-    transition.value = true;
-  }, 100);
 
   // watch all parents' scroll event
   let parent = document.getElementById(id.value)?.parentElement;
@@ -70,6 +77,11 @@ onBeforeUnmount(() => {
     observer.unobserve(element);
   }
 
+  // watch window resize
+  window.removeEventListener('resize', () => {
+    updatePosition();
+  });
+
   // watch all parents' scroll event
   let parent = document.getElementById(id.value)?.parentElement;
 
@@ -87,16 +99,19 @@ const safariOpacity = computed(() => {
   return `#ffffff${hex}`;
 });
 
+const imgSrc = ref(blurred.value.src);
+
 watch(blurredUpdateDate, () => {
   console.log('watch blurredUpdateDate', blurredUpdateDate.value);
+  imgSrc.value = blurred.value.src;
   updatePosition();
 });
 
 </script>
 
 <template>
-  <div :class="`micaBackground ${isSafari ? 'safari' : ''}`" :id="id">
-    <img v-if="!isSafari" :class="`backgroundImage ${transition ? 'transition' : ''}`" :src="blurred.src">
+  <div :id="id" :class="`micaBackground ${isSafari ? 'safari' : ''}`">
+    <img v-if="!isSafari" :class="`backgroundImage`" :src="imgSrc">
   </div>
 </template>
 
@@ -122,10 +137,6 @@ watch(blurredUpdateDate, () => {
     height: 100vh;
     opacity: v-bind(opacity);
     z-index: 0;
-
-    &.transition {
-      transition: all 0.1s;
-    }
   }
 }
 </style>

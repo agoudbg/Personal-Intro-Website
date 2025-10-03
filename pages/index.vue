@@ -24,6 +24,7 @@ const duringCardAnimation = computed(() => {
   return currentCardAnimationEndAt.value > Date.now();
 });
 const animationObserverTransform = ref('');
+const animationObserverOpacity = ref(1);
 
 // Calculate via scroll slide scroll, make the header move to the same position of .header
 const calculateSpacerHeader = () => {
@@ -99,7 +100,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     && !(isClose && e === 'b')
   ) return;
 
-  const animationTime = isClose ? 1000 : 900;
+  const animationTime = isClose ? 600 : 800;
   const animationTimingFunction = isClose
     ? 'cubic-bezier(0.77, 0, 0.175, 1)'
     : 'cubic-bezier(0.77, 0, 0.175, 1)';
@@ -129,6 +130,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
   // if has animation card, calculate from/to status for animation card, detail container and original preview card
   await nextTick(() => {
     const fixOriginalPreviewCardRect = (originalPreviewCardRect: DOMRect) => {
+      const scale = 0.96;
       // get scale percent
       const indexElement = document.querySelector('.index');
       const transform = window.getComputedStyle(indexElement!).transform;
@@ -140,8 +142,8 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       }
 
       if ([0, 1].includes(slideMode.value) && isClose) {
-        const width = originalPreviewCardRect.width / 0.96;
-        const height = originalPreviewCardRect.height / 0.96;
+        const width = originalPreviewCardRect.width / scale;
+        const height = originalPreviewCardRect.height / scale;
 
         const { innerWidth, innerHeight } = window;
 
@@ -152,8 +154,8 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         console.log('scaleFactorX', scaleFactorX, 'scaleFactorY', scaleFactorY);
 
         // calculate the offset top and left by the item's distance to the center of the screen
-        const top = (originalPreviewCardRect.top - (innerHeight / 2)) / 0.96 + (innerHeight / 2);
-        const left = (originalPreviewCardRect.left - (innerWidth / 2)) / 0.96 + (innerWidth / 2);
+        const top = (originalPreviewCardRect.top - (innerHeight / 2)) / scale + (innerHeight / 2);
+        const left = (originalPreviewCardRect.left - (innerWidth / 2)) / scale + (innerWidth / 2);
 
         // fix the offset top and left
         return {
@@ -178,7 +180,9 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       const originalPreviewCardRectFixed = fixOriginalPreviewCardRect(originalPreviewCardRect);
 
       // if is slide mode 0/1 on closing, there is a 96% scale from the whole screen
-      // 111
+
+      // get the original card's opacity
+      const originalCardOpacity = getElementOpacity(originalPreviewCard);
 
       const px = (n: number) => `${n}px`;
 
@@ -190,7 +194,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         width: px(originalPreviewCardRectFixed.width),
         height: px(originalPreviewCardRectFixed.height),
         backgroundColor: 'var(--preview-card-background-color)',
-        opacity: 1,
+        opacity: originalCardOpacity,
         // borderRadius: originalPreviewCard.style.borderRadius,
       };
 
@@ -400,6 +404,16 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
             return;
           }
 
+          // get card opacity
+          const originalCardOpacityNew = getElementOpacity(originalPreviewCardNew);
+
+          // do not use opacity defined in keyframe if current opacity > 0, set animation observer opacity instead
+          if (originalCardOpacityNew > 0) {
+            originalPreviewCardNew.style.opacity = '1';
+            animationObserverOpacity.value = originalCardOpacityNew;
+            console.log('set animationObserverOpacity', animationObserverOpacity.value);
+          }
+
           // re-get originalPreviewCardRect
           const originalPreviewCardRectNew = originalPreviewCardNew.getBoundingClientRect();
 
@@ -421,6 +435,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
                 window.removeEventListener('resize', () => { updateAnimationObserverTransform(); });
 
                 animationObserverTransform.value = `translate(0px, 0px) scale(1)`;
+                animationObserverOpacity.value = 1;
 
                 clearInterval(inv);
 
@@ -452,6 +467,22 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
   if (e === 'b') {
     await new Promise((resolve => setTimeout(resolve, animationTime / 2 + 10)));
   }
+};
+
+// Utility function to get the element that has opacity applied to it
+const getOpacityAppliedElement = (element: HTMLElement | null): HTMLElement | null => {
+  let opacityAppliedElement: HTMLElement | null = element;
+  while (opacityAppliedElement && opacityAppliedElement !== document.body) {
+    if (opacityAppliedElement.classList.contains('slider-slot')) break;
+    opacityAppliedElement = opacityAppliedElement.parentElement;
+  }
+  return opacityAppliedElement;
+};
+
+// Utility function to get the opacity value of an element
+const getElementOpacity = (element: HTMLElement | null): number => {
+  const opacityAppliedElement = getOpacityAppliedElement(element);
+  return opacityAppliedElement ? Number(getComputedStyle(opacityAppliedElement).opacity) : 1;
 };
 
 </script>
@@ -559,7 +590,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  transition: border-radius 0.6s, transform 0.6s;
+  transition: border-radius 0.3s, transform 0.3s;
 
   &.m-0.hide,
   &.m-1.hide {
@@ -651,7 +682,9 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       .slide-item {
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.4s, visibility 0s 0.4s;
+        filter: blur(12px);
+        pointer-events: none;
+        transition: opacity 0.4s, visibility 0s 0.4s, filter 0.4s;
       }
     }
 
@@ -683,6 +716,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
   top: 0;
   left: 0;
   transform: v-bind(animationObserverTransform);
+  opacity: v-bind(animationObserverOpacity);
   width: 100vw;
   height: 100vh;
   z-index: 102;
