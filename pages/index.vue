@@ -26,6 +26,18 @@ const duringCardAnimation = computed(() => {
 const animationObserverTransform = ref('');
 const animationObserverOpacity = ref(1);
 
+// rAF-based throttle helper to avoid scroll/resize thrash
+const throttleRAF = (fn: (...args: any[]) => void) => {
+  let scheduled = false;
+  return (...args: any[]) => {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      try { fn(...args); } finally { scheduled = false; }
+    });
+  };
+};
+
 // Calculate via scroll slide scroll, make the header move to the same position of .header
 const calculateSpacerHeader = () => {
   // Calculate the scroll percentage
@@ -47,15 +59,21 @@ const calculateSpacerHeader = () => {
 };
 
 onMounted(() => {
-  document.querySelector('.slider-box .slide')?.addEventListener('scroll', () => {
-    calculateSpacerHeader();
-  });
+  // attach throttled scroll/resize handlers and ensure cleanup
+  const slideEl = document.querySelector('.slider-box .slide') as HTMLElement | null;
 
-  window.addEventListener('resize', () => {
-    calculateSpacerHeader();
-  });
+  const slideScrollHandler = throttleRAF(() => { calculateSpacerHeader(); });
+  const windowResizeHandler = throttleRAF(() => { calculateSpacerHeader(); });
+
+  slideEl?.addEventListener('scroll', slideScrollHandler);
+  window.addEventListener('resize', windowResizeHandler);
 
   calculateSpacerHeader();
+
+  onUnmounted(() => {
+    slideEl?.removeEventListener('scroll', slideScrollHandler);
+    window.removeEventListener('resize', windowResizeHandler);
+  });
 });
 
 // card animation
@@ -393,6 +411,11 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       if (isClose) {
         let hasTriggeredObserver = false;
 
+        const slideForObserver = document.querySelector('.slider-box .slide') as HTMLElement | null;
+
+        // named observer handler (throttled via rAF)
+        const observerScrollHandler = throttleRAF(() => { updateAnimationObserverTransform(); });
+
         const updateAnimationObserverTransform = (fromInterval = false) => {
           if (hasTriggeredObserver && !fromInterval) return;
           hasTriggeredObserver = true;
@@ -427,30 +450,35 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
           console.log('animationObserverTransform', animationObserverTransform.value);
 
-          // if observer triggered, we have to run an interval to keep the animation card in the right place
+          // if observer triggered, run a rAF loop to keep the animation card in the right place
           if (!fromInterval) {
-            const inv = setInterval(() => {
+            let rafId: number | null = null;
+
+            const animationObserverLoop = () => {
               if (currentCardAnimationEndAt.value < Date.now()) {
-                slide?.removeEventListener('scroll', () => { updateAnimationObserverTransform(); });
-                window.removeEventListener('resize', () => { updateAnimationObserverTransform(); });
+                // cleanup listeners and state
+                slideForObserver?.removeEventListener('scroll', observerScrollHandler);
+                window.removeEventListener('resize', observerScrollHandler);
 
                 animationObserverTransform.value = `translate(0px, 0px) scale(1)`;
                 animationObserverOpacity.value = 1;
 
-                clearInterval(inv);
-
+                if (rafId) cancelAnimationFrame(rafId);
+                rafId = null;
                 return;
               }
 
               updateAnimationObserverTransform(true);
+              rafId = requestAnimationFrame(animationObserverLoop);
+            };
 
-            }, 10);
+            rafId = requestAnimationFrame(animationObserverLoop);
           }
         };
 
-        const slide = document.querySelector('.slider-box .slide');
-        slide?.addEventListener('scroll', () => { updateAnimationObserverTransform(); });
-        window.addEventListener('resize', () => { updateAnimationObserverTransform(); });
+        // add named listeners so they can be removed
+        slideForObserver?.addEventListener('scroll', observerScrollHandler);
+        window.addEventListener('resize', observerScrollHandler);
 
       }
 
