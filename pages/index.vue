@@ -446,11 +446,17 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
           // re-get originalPreviewCardRect
           const originalPreviewCardRectNew = originalPreviewCardNew.getBoundingClientRect();
 
-          // compare the originalPreviewCardRectNew and originalPreviewCardRect
-          const diffTop = originalPreviewCardRectNew.top - originalPreviewCardRectFixed.top;
-          const diffLeft = originalPreviewCardRectNew.left - originalPreviewCardRectFixed.left;
-
           const scalePercent = originalPreviewCardRectNew.width / originalPreviewCardRectFixed.width;
+          // compare the originalPreviewCardRectNew and originalPreviewCardRect
+
+          let diffTop = (originalPreviewCardRectNew.top - originalPreviewCardRectFixed.top);
+          let diffLeft = (originalPreviewCardRectNew.left - originalPreviewCardRectFixed.left);
+
+          if (scalePercent < 1) {
+            // adjust diffTop and diffLeft based on scalePercent
+            diffTop -= (originalPreviewCardRectFixed.height * (1 - scalePercent)) / 2;
+            diffLeft -= (originalPreviewCardRectFixed.width * (1 - scalePercent)) / 2;
+          }
 
           animationObserverTransform.value = `translate(${diffLeft}px, ${diffTop}px) scale(${scalePercent})`;
 
