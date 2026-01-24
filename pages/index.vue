@@ -239,11 +239,15 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
       // scale card content to keep the same size as detail container
       const animationCardContentFrom = {
-        transform: `scale(1)`,
+        transform: 'scale(1)',
       };
 
+      const animationCardContentScalePercent = detailContainerRect.width / originalPreviewCardRectFixed.width;
+      // Calculate transformY value
+      const animationCardContentTransformY = (detailContainerRect.height - originalPreviewCardRectFixed.height) / 4;
+
       const animationCardContentTo = {
-        transform: `scale(${detailContainerRect.width / originalPreviewCardRectFixed.width})`,
+        transform: `scale(${animationCardContentScalePercent}) translateY(${px(animationCardContentTransformY)})`,
       };
 
       // original preview card from: opacity = 0
