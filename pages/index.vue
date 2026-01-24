@@ -118,9 +118,11 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     && !(isClose && e === 'b')
   ) return;
 
-  const animationTime = isClose ? 600 : 800;
+  const animationTime = isClose ? 1200 : 800;
+  const animationHalfPercent = isClose ? 0.1 : 0.5;
+  const animationHalfTime = animationTime * animationHalfPercent;
   const animationTimingFunction = isClose
-    ? 'cubic-bezier(0.77, 0, 0.175, 1)'
+    ? 'linear(0 0%, 0.0071 0.9284%, 0.0286 1.9894%, 0.1103 4.244%, 0.6276 13.7931%, 0.8453 18.9655%, 0.9266 21.7507%, 0.9867 24.6684%, 1.0261 27.7188%, 1.0398 29.443%, 1.0485 31.1671%, 1.0521 32.3607%, 1.0541 33.687%, 1.0543 35.2785%, 1.0527 36.87%, 1.0449 40.3183%, 1.0187 49.0716%, 1.0091 53.3156%, 1.0043 56.2334%, 1.0009 59.1512%, 0.9986 62.3342%, 0.9974 65.7825%, 0.9971 71.3528%, 0.9995 87.7984%, 1.0001 100%)'
     : 'cubic-bezier(0.77, 0, 0.175, 1)';
 
   const cardName = isClose ? from.name : to.name;
@@ -304,8 +306,8 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       // sort animation from/to
       const animationCardAnimation = [
         [isClose ? 1 : 0, animationCardFrom],
-        [isClose ? 0.49 : 0.51, animationCardMiddle2],
-        [isClose ? 0.51 : 0.49, animationCardMiddle],
+        [isClose ? animationHalfPercent - 0.01 : animationHalfPercent + 0.01, animationCardMiddle2],
+        [isClose ? animationHalfPercent + 0.01 : animationHalfPercent - 0.01, animationCardMiddle],
         [isClose ? 0 : 1, animationCardTo],
       ];
 
@@ -321,8 +323,8 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
       const detailContainerAnimation = [
         [isClose ? 1 : 0, detailContainerFrom],
-        [isClose ? 0.49 : 0.51, detailContainerMiddle2],
-        [isClose ? 0.51 : 0.49, detailContainerMiddle],
+        [isClose ? animationHalfPercent - 0.01 : animationHalfPercent + 0.01, detailContainerMiddle2],
+        [isClose ? animationHalfPercent + 0.01 : animationHalfPercent - 0.01, detailContainerMiddle],
         [isClose ? 0 : 1, detailContainerTo],
       ];
 
@@ -497,7 +499,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
   // if is before router change, wait
   if (e === 'b') {
-    await new Promise((resolve => setTimeout(resolve, animationTime / 2 + 10)));
+    await new Promise((resolve => setTimeout(resolve, animationHalfTime + 10)));
   }
 };
 
