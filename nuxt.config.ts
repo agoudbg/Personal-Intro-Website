@@ -12,7 +12,10 @@ export default defineNuxtConfig({
     '@nuxt/scripts'
   ],
   build: {
-    transpile: ['scroll-slides'],
+    transpile: [
+      'scroll-slides',
+      'dark-icon-generator/browser',
+    ],
   },
 
   css: ['./assets/theme.scss', './assets/basis.scss'],

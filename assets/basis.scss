@@ -13,6 +13,7 @@ body {
   text-size-adjust: 100%;
   line-height: 1.21;
   background-color: var(--page-background-color);
+  color: var(--page-text-color);
 }
 
 * {
@@ -20,12 +21,15 @@ body {
   padding: 0;
   box-sizing: border-box;
   border: none;
-  color: var(--page-text-color);
   text-decoration: none;
   scrollbar-width: none;
   -webkit-tap-highlight-color: #00000000;
   font-family: var(--font-family);
   line-height: inherit;
+}
+
+a {
+  color: var(--page-text-color);
 }
 
 ::-webkit-scrollbar {
