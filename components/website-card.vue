@@ -166,7 +166,6 @@ watch(theme, async () => {
 
     * {
       max-width: 100%;
-      transition: all 0.3s;
     }
 
     .name {
@@ -175,17 +174,19 @@ watch(theme, async () => {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      transition: all 0.3s;
     }
 
     .description {
-      font-size: 0.85em;
       color: var(--text-secondary);
 
       .description-text {
+        font-size: 0.85em;
         color: var(--text-secondary);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        transition: all 0.3s;
       }
 
       .link-text {
@@ -195,6 +196,7 @@ watch(theme, async () => {
         margin-top: 0.2em;
         font-size: 0.875em;
         filter: blur(4px);
+        transition: all 0.3s;
 
         .icon {
           font-size: 0.8em;
@@ -243,7 +245,7 @@ watch(theme, async () => {
 
       .description {
         .description-text {
-          font-size: 0.85em;
+          font-size: 0.75em;
         }
 
         .link-text {
