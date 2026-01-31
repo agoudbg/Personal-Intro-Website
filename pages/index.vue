@@ -25,6 +25,12 @@ const duringCardAnimation = computed(() => {
 });
 const animationObserverTransform = ref('');
 const animationObserverOpacity = ref(1);
+const resetAnimationArtifacts = () => {
+  animationCard.value = undefined;
+  animationObserverTransform.value = 'translate(0px, 0px) scale(1)';
+  animationObserverOpacity.value = 1;
+  currentCardAnimationEndAt.value = 0;
+};
 
 // rAF-based throttle helper to avoid scroll/resize thrash
 const throttleRAF = (fn: (...args: any[]) => void) => {
@@ -144,7 +150,10 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
   }
 
   const originalPreviewCard: HTMLElement | null = document.body.querySelector(`.slide-item .card[href*="${isClose ? from.path : to.path}"]`);
-  if (!originalPreviewCard) return;
+  if (!originalPreviewCard) {
+    resetAnimationArtifacts();
+    return;
+  }
   const originalPreviewCardRect = originalPreviewCard.getBoundingClientRect();
 
   // if has animation card, calculate from/to status for animation card, detail container and original preview card
@@ -198,6 +207,11 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       if (!animationCardElement || !detailContainer || !originalPreviewCard) return;
       const detailContainerRect = detailContainer.getBoundingClientRect();
       const originalPreviewCardRectFixed = fixOriginalPreviewCardRect(originalPreviewCardRect);
+      const isRectUsable = (rect: { width: number; height: number }) => Number.isFinite(rect.width) && Number.isFinite(rect.height) && rect.width > 0 && rect.height > 0;
+      if (!isRectUsable(detailContainerRect) || !isRectUsable(originalPreviewCardRectFixed)) {
+        resetAnimationArtifacts();
+        return;
+      }
 
       // if is slide mode 0/1 on closing, there is a 96% scale from the whole screen
 
@@ -244,9 +258,11 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         transform: 'scale(1)',
       };
 
-      const animationCardContentScalePercent = detailContainerRect.width / originalPreviewCardRectFixed.width;
+      const animationCardContentScalePercentRaw = detailContainerRect.width / originalPreviewCardRectFixed.width;
+      const animationCardContentScalePercent = Number.isFinite(animationCardContentScalePercentRaw) ? animationCardContentScalePercentRaw : 1;
       // Calculate transformY value
-      const animationCardContentTransformY = (detailContainerRect.height - originalPreviewCardRectFixed.height) / 4;
+      const animationCardContentTransformYRaw = (detailContainerRect.height - originalPreviewCardRectFixed.height) / 4;
+      const animationCardContentTransformY = Number.isFinite(animationCardContentTransformYRaw) ? animationCardContentTransformYRaw : 0;
 
       const animationCardContentTo = {
         transform: `scale(${animationCardContentScalePercent}) translateY(${px(animationCardContentTransformY)})`,
@@ -295,8 +311,10 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       };
 
       // scale detail content to keep the same size as original preview card
+      const detailContainerContentScaleRaw = originalPreviewCardRectFixed.width / detailContainerRect.width;
+      const detailContainerContentScale = Number.isFinite(detailContainerContentScaleRaw) ? detailContainerContentScaleRaw : 1;
       const detailContainerContentFrom = {
-        transform: `scale(${originalPreviewCardRectFixed.width / detailContainerRect.width})`,
+        transform: `scale(${detailContainerContentScale})`,
       };
 
       const detailContainerContentTo = {
