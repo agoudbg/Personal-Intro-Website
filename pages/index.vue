@@ -19,13 +19,20 @@ const spacerHeaderTopOffset = ref('0px');
 const showSpacerHeader = ref(false);
 const showHeaderBackdrop = ref(false);
 
+const animationCard = shallowRef<Component | undefined>(undefined);
 const currentCardAnimationEndAt = ref(0);
-const duringCardAnimation = computed(() => {
-  return currentCardAnimationEndAt.value > Date.now();
-});
 const animationObserverTransform = ref('');
 const animationObserverOpacity = ref(1);
+let activeCardAnimationCleanup: (() => void) | undefined;
+
+const cleanupActiveCardAnimation = () => {
+  const cleanup = activeCardAnimationCleanup;
+  activeCardAnimationCleanup = undefined;
+  cleanup?.();
+};
+
 const resetAnimationArtifacts = () => {
+  cleanupActiveCardAnimation();
   animationCard.value = undefined;
   animationObserverTransform.value = 'translate(0px, 0px) scale(1)';
   animationObserverOpacity.value = 1;
@@ -84,8 +91,6 @@ onMounted(() => {
 
 // card animation
 
-const animationCard = ref<Component | undefined>(undefined);
-
 // on nuxt router change
 const router = useRouter();
 
@@ -102,18 +107,17 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
   console.log('router change', to, from);
 
   if (from.name !== 'index' && to.name !== 'index') {
-    animationCard.value = undefined;
-
+    resetAnimationArtifacts();
     return;
   }
 
-  // if already in animation
-  if (duringCardAnimation.value) {
-    // await the animation after the current one
+  const remainingAnimationTime = currentCardAnimationEndAt.value - Date.now();
+  if (remainingAnimationTime > 0) {
     await new Promise((resolve) => {
-      setTimeout(resolve, currentCardAnimationEndAt.value - Date.now() + 200);
+      setTimeout(resolve, remainingAnimationTime + 200);
     });
   }
+  cleanupActiveCardAnimation();
 
   const isClose = to.name === 'index';
 
@@ -158,62 +162,23 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
   // if has animation card, calculate from/to status for animation card, detail container and original preview card
   await nextTick(() => {
-    const fixOriginalPreviewCardRect = (originalPreviewCardRect: DOMRect) => {
-      const scale = 0.96;
-      // get scale percent
-      const indexElement = document.querySelector('.index');
-      const transform = window.getComputedStyle(indexElement!).transform;
-      const scaleRaw = transform.match(/scale\(([^)]+)\)/);
-      const scalePercent = scaleRaw ? Number(scaleRaw[1]) : 1;
-      if (isNaN(scalePercent)) {
-        console.error('scalePercent is NaN');
-        return originalPreviewCardRect;
-      }
-
-      if ([0, 1].includes(slideMode.value) && isClose) {
-        const width = originalPreviewCardRect.width / scale;
-        const height = originalPreviewCardRect.height / scale;
-
-        const { innerWidth, innerHeight } = window;
-
-        // calculate the scale factor by the item's distance to the center of the screen
-        const scaleFactorX = (originalPreviewCardRect.left + originalPreviewCardRect.width / 2 - innerWidth / 2) / (innerWidth / 2);
-        const scaleFactorY = (originalPreviewCardRect.top + originalPreviewCardRect.height / 2 - innerHeight / 2) / (innerHeight / 2);
-
-        console.log('scaleFactorX', scaleFactorX, 'scaleFactorY', scaleFactorY);
-
-        // calculate the offset top and left by the item's distance to the center of the screen
-        const top = (originalPreviewCardRect.top - (innerHeight / 2)) / scale + (innerHeight / 2);
-        const left = (originalPreviewCardRect.left - (innerWidth / 2)) / scale + (innerWidth / 2);
-
-        // fix the offset top and left
-        return {
-          ...originalPreviewCardRect,
-          width,
-          height,
-          top,
-          left,
-        };
-      }
-
-      return originalPreviewCardRect;
-    };
-
     if (animationCard.value) {
       const animationCardElement: HTMLElement | null = document.body.querySelector('.animation-card-container .card');
       const detailContainer: HTMLElement | null = document.body.querySelector('.detail-container');
       console.log(animationCardElement, detailContainer, originalPreviewCard);
 
-      if (!animationCardElement || !detailContainer || !originalPreviewCard) return;
-      const detailContainerRect = detailContainer.getBoundingClientRect();
-      const originalPreviewCardRectFixed = fixOriginalPreviewCardRect(originalPreviewCardRect);
-      const isRectUsable = (rect: { width: number; height: number }) => Number.isFinite(rect.width) && Number.isFinite(rect.height) && rect.width > 0 && rect.height > 0;
-      if (!isRectUsable(detailContainerRect) || !isRectUsable(originalPreviewCardRectFixed)) {
+      if (!animationCardElement || !detailContainer || !originalPreviewCard) {
         resetAnimationArtifacts();
         return;
       }
-
-      // if is slide mode 0/1 on closing, there is a 96% scale from the whole screen
+      const detailContainerRect = detailContainer.getBoundingClientRect();
+      const sourcePreviewCardRect = originalPreviewCardRect;
+      const animationCardNaturalWidth = animationCardElement.offsetWidth;
+      const isRectUsable = (rect: { width: number; height: number }) => Number.isFinite(rect.width) && Number.isFinite(rect.height) && rect.width > 0 && rect.height > 0;
+      if (!isRectUsable(detailContainerRect) || !isRectUsable(sourcePreviewCardRect) || animationCardNaturalWidth <= 0) {
+        resetAnimationArtifacts();
+        return;
+      }
 
       // get the original card's opacity
       const originalCardOpacity = getElementOpacity(originalPreviewCard);
@@ -223,10 +188,10 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       // animation card from: the same as original preview card
       const animationCardFrom = {
         position: 'fixed',
-        top: px(originalPreviewCardRectFixed.top),
-        left: px(originalPreviewCardRectFixed.left),
-        width: px(originalPreviewCardRectFixed.width),
-        height: px(originalPreviewCardRectFixed.height),
+        top: px(sourcePreviewCardRect.top),
+        left: px(sourcePreviewCardRect.left),
+        width: px(sourcePreviewCardRect.width),
+        height: px(sourcePreviewCardRect.height),
         backgroundColor: 'var(--preview-card-background-color)',
         opacity: originalCardOpacity,
         // borderRadius: originalPreviewCard.style.borderRadius,
@@ -254,14 +219,15 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       };
 
       // scale card content to keep the same size as detail container
+      const animationCardContentSourceScale = sourcePreviewCardRect.width / animationCardNaturalWidth;
       const animationCardContentFrom = {
-        transform: 'scale(1)',
+        transform: `scale(${animationCardContentSourceScale})`,
       };
 
-      const animationCardContentScalePercentRaw = detailContainerRect.width / originalPreviewCardRectFixed.width;
+      const animationCardContentScalePercentRaw = detailContainerRect.width / animationCardNaturalWidth;
       const animationCardContentScalePercent = Number.isFinite(animationCardContentScalePercentRaw) ? animationCardContentScalePercentRaw : 1;
       // Calculate transformY value
-      const animationCardContentTransformYRaw = (detailContainerRect.height - originalPreviewCardRectFixed.height) / 4;
+      const animationCardContentTransformYRaw = (detailContainerRect.height - sourcePreviewCardRect.height) / 4;
       const animationCardContentTransformY = Number.isFinite(animationCardContentTransformYRaw) ? animationCardContentTransformYRaw : 0;
 
       const animationCardContentTo = {
@@ -283,10 +249,10 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       // detail container from: the same as original preview card
       const detailContainerFrom = {
         position: 'fixed',
-        top: px(originalPreviewCardRectFixed.top),
-        left: px(originalPreviewCardRectFixed.left),
-        width: px(originalPreviewCardRectFixed.width),
-        height: px(originalPreviewCardRectFixed.height),
+        top: px(sourcePreviewCardRect.top),
+        left: px(sourcePreviewCardRect.left),
+        width: px(sourcePreviewCardRect.width),
+        height: px(sourcePreviewCardRect.height),
         transform: 'rotate3d(0, 1, 0, 180deg)',
         opacity: 0,
       };
@@ -311,7 +277,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       };
 
       // scale detail content to keep the same size as original preview card
-      const detailContainerContentScaleRaw = originalPreviewCardRectFixed.width / detailContainerRect.width;
+      const detailContainerContentScaleRaw = sourcePreviewCardRect.width / detailContainerRect.width;
       const detailContainerContentScale = Number.isFinite(detailContainerContentScaleRaw) ? detailContainerContentScaleRaw : 1;
       const detailContainerContentFrom = {
         transform: `scale(${detailContainerContentScale})`,
@@ -412,6 +378,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
       .animation-card-container .card .card-content {
         animation: animationCardContent ${animationTime}ms ${animationTimingFunction} forwards;
+        transform-origin: top center;
       }
 
       .detail-container {
@@ -431,93 +398,57 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
       document.head.appendChild(styleElement);
 
-      // if slide scrolled/resized, use animationObserverTransform to move the animation card to the right place
+      let animationObserverRafId: number | undefined;
+      let cleanupTimerId: number | undefined;
+      let hasCleanedUp = false;
+
+      const cleanupAnimation = () => {
+        if (hasCleanedUp) return;
+        hasCleanedUp = true;
+
+        if (animationObserverRafId !== undefined) cancelAnimationFrame(animationObserverRafId);
+        if (cleanupTimerId !== undefined) window.clearTimeout(cleanupTimerId);
+        if (styleElement.isConnected) styleElement.remove();
+
+        if (activeCardAnimationCleanup === cleanupAnimation) activeCardAnimationCleanup = undefined;
+        animationCard.value = undefined;
+        animationObserverTransform.value = 'translate(0px, 0px) scale(1)';
+        animationObserverOpacity.value = 1;
+        currentCardAnimationEndAt.value = 0;
+      };
+
+      activeCardAnimationCleanup = cleanupAnimation;
+
+      // Track the source card while the index view restores its scale during close.
       if (isClose) {
-        let hasTriggeredObserver = false;
+        const updateAnimationObserverTransform = () => {
+          if (currentCardAnimationEndAt.value <= Date.now()) return;
 
-        const slideForObserver = document.querySelector('.slider-box .slide') as HTMLElement | null;
-
-        // named observer handler (throttled via rAF)
-        const observerScrollHandler = throttleRAF(() => { updateAnimationObserverTransform(); });
-
-        const updateAnimationObserverTransform = (fromInterval = false) => {
-          if (hasTriggeredObserver && !fromInterval) return;
-          hasTriggeredObserver = true;
-
-          // the element itself may change due to viewport change, so re-get
           const originalPreviewCardNew: HTMLElement | null = document.body.querySelector(`.slide-item .card[href*="${isClose ? from.path : to.path}"]`);
           if (!originalPreviewCardNew) {
             console.error('originalPreviewCardNew not found');
+            animationObserverRafId = requestAnimationFrame(updateAnimationObserverTransform);
             return;
           }
 
-          // get card opacity
           const originalCardOpacityNew = getElementOpacity(originalPreviewCardNew);
-
-          // do not use opacity defined in keyframe if current opacity > 0, set animation observer opacity instead
-          if (originalCardOpacityNew > 0) {
-            originalPreviewCardNew.style.opacity = '1';
-            animationObserverOpacity.value = originalCardOpacityNew;
-            console.log('set animationObserverOpacity', animationObserverOpacity.value);
-          }
-
-          // re-get originalPreviewCardRect
           const originalPreviewCardRectNew = originalPreviewCardNew.getBoundingClientRect();
+          const scalePercent = originalPreviewCardRectNew.width / sourcePreviewCardRect.width;
 
-          const scalePercent = originalPreviewCardRectNew.width / originalPreviewCardRectFixed.width;
-          // compare the originalPreviewCardRectNew and originalPreviewCardRect
-
-          let diffTop = (originalPreviewCardRectNew.top - originalPreviewCardRectFixed.top);
-          let diffLeft = (originalPreviewCardRectNew.left - originalPreviewCardRectFixed.left);
-
-          if (scalePercent < 1) {
-            // adjust diffTop and diffLeft based on scalePercent
-            diffTop -= (originalPreviewCardRectFixed.height * (1 - scalePercent)) / 2;
-            diffLeft -= (originalPreviewCardRectFixed.width * (1 - scalePercent)) / 2;
+          if (Number.isFinite(scalePercent) && scalePercent > 0) {
+            const diffLeft = originalPreviewCardRectNew.left - sourcePreviewCardRect.left * scalePercent;
+            const diffTop = originalPreviewCardRectNew.top - sourcePreviewCardRect.top * scalePercent;
+            animationObserverTransform.value = `translate(${diffLeft}px, ${diffTop}px) scale(${scalePercent})`;
           }
 
-          animationObserverTransform.value = `translate(${diffLeft}px, ${diffTop}px) scale(${scalePercent})`;
-
-          console.log('animationObserverTransform', animationObserverTransform.value);
-
-          // if observer triggered, run a rAF loop to keep the animation card in the right place
-          if (!fromInterval) {
-            let rafId: number | null = null;
-
-            const animationObserverLoop = () => {
-              if (currentCardAnimationEndAt.value < Date.now()) {
-                // cleanup listeners and state
-                slideForObserver?.removeEventListener('scroll', observerScrollHandler);
-                window.removeEventListener('resize', observerScrollHandler);
-
-                animationObserverTransform.value = `translate(0px, 0px) scale(1)`;
-                animationObserverOpacity.value = 1;
-
-                if (rafId) cancelAnimationFrame(rafId);
-                rafId = null;
-                return;
-              }
-
-              updateAnimationObserverTransform(true);
-              rafId = requestAnimationFrame(animationObserverLoop);
-            };
-
-            rafId = requestAnimationFrame(animationObserverLoop);
-          }
+          animationObserverOpacity.value = Number.isFinite(originalCardOpacityNew) ? originalCardOpacityNew : 1;
+          animationObserverRafId = requestAnimationFrame(updateAnimationObserverTransform);
         };
 
-        // add named listeners so they can be removed
-        slideForObserver?.addEventListener('scroll', observerScrollHandler);
-        window.addEventListener('resize', observerScrollHandler);
-
+        animationObserverRafId = requestAnimationFrame(updateAnimationObserverTransform);
       }
 
-      setTimeout(() => {
-        animationCard.value = undefined;
-
-        // remove style element
-        document.head.removeChild(styleElement);
-      }, animationTime + 5);
+      cleanupTimerId = window.setTimeout(cleanupAnimation, animationTime + 5);
     }
   });
 
@@ -774,6 +705,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
   top: 0;
   left: 0;
   transform: v-bind(animationObserverTransform);
+  transform-origin: top left;
   opacity: v-bind(animationObserverOpacity);
   width: 100vw;
   height: 100vh;
