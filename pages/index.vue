@@ -22,7 +22,6 @@ const showHeaderBackdrop = ref(false);
 const animationCard = shallowRef<Component | undefined>(undefined);
 const currentCardAnimationEndAt = ref(0);
 const animationObserverTransform = ref('');
-const animationObserverOpacity = ref(1);
 let activeCardAnimationCleanup: (() => void) | undefined;
 
 const cleanupActiveCardAnimation = () => {
@@ -35,7 +34,6 @@ const resetAnimationArtifacts = () => {
   cleanupActiveCardAnimation();
   animationCard.value = undefined;
   animationObserverTransform.value = 'translate(0px, 0px) scale(1)';
-  animationObserverOpacity.value = 1;
   currentCardAnimationEndAt.value = 0;
 };
 
@@ -130,6 +128,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
   const animationTime = isClose ? 1200 : 800;
   const animationHalfPercent = isClose ? 0.1 : 0.5;
+  const animationOpacityHandoffPercent = 0.95;
   const animationHalfTime = animationTime * animationHalfPercent;
   const animationTimingFunction = isClose
     ? 'linear(0 0%, 0.0071 0.9284%, 0.0286 1.9894%, 0.1103 4.244%, 0.6276 13.7931%, 0.8453 18.9655%, 0.9266 21.7507%, 0.9867 24.6684%, 1.0261 27.7188%, 1.0398 29.443%, 1.0485 31.1671%, 1.0521 32.3607%, 1.0541 33.687%, 1.0543 35.2785%, 1.0527 36.87%, 1.0449 40.3183%, 1.0187 49.0716%, 1.0091 53.3156%, 1.0043 56.2334%, 1.0009 59.1512%, 0.9986 62.3342%, 0.9974 65.7825%, 0.9971 71.3528%, 0.9995 87.7984%, 1.0001 100%)'
@@ -292,6 +291,8 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         [isClose ? 1 : 0, animationCardFrom],
         [isClose ? animationHalfPercent - 0.01 : animationHalfPercent + 0.01, animationCardMiddle2],
         [isClose ? animationHalfPercent + 0.01 : animationHalfPercent - 0.01, animationCardMiddle],
+        // Keep the close clone opaque until it is ready to hand off to the faded list card.
+        ...(isClose ? [[animationOpacityHandoffPercent, animationCardMiddle]] : []),
         [isClose ? 0 : 1, animationCardTo],
       ];
 
@@ -413,7 +414,6 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         if (activeCardAnimationCleanup === cleanupAnimation) activeCardAnimationCleanup = undefined;
         animationCard.value = undefined;
         animationObserverTransform.value = 'translate(0px, 0px) scale(1)';
-        animationObserverOpacity.value = 1;
         currentCardAnimationEndAt.value = 0;
       };
 
@@ -431,7 +431,6 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
             return;
           }
 
-          const originalCardOpacityNew = getElementOpacity(originalPreviewCardNew);
           const originalPreviewCardRectNew = originalPreviewCardNew.getBoundingClientRect();
           const scalePercent = originalPreviewCardRectNew.width / sourcePreviewCardRect.width;
 
@@ -441,7 +440,6 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
             animationObserverTransform.value = `translate(${diffLeft}px, ${diffTop}px) scale(${scalePercent})`;
           }
 
-          animationObserverOpacity.value = Number.isFinite(originalCardOpacityNew) ? originalCardOpacityNew : 1;
           animationObserverRafId = requestAnimationFrame(updateAnimationObserverTransform);
         };
 
@@ -706,7 +704,6 @@ const getElementOpacity = (element: HTMLElement | null): number => {
   left: 0;
   transform: v-bind(animationObserverTransform);
   transform-origin: top left;
-  opacity: v-bind(animationObserverOpacity);
   width: 100vw;
   height: 100vh;
   z-index: 102;
