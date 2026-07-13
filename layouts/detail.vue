@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { slideMode } from '#imports';
 
-const props = defineProps({
+defineProps({
   pageTitle: {
     type: String,
     required: true,
@@ -48,7 +48,10 @@ onBeforeUnmount(() => {
       <div class="title">
         {{ pageTitle }}
       </div>
-      <NuxtLink class="icon" :to="'/'">
+      <div v-if="$slots['header-actions']" class="header-actions">
+        <slot name="header-actions" />
+      </div>
+      <NuxtLink class="close-button" :to="'/'" aria-label="关闭">
         <Icon name="material-symbols:close-rounded" />
       </NuxtLink>
     </div>
@@ -89,13 +92,27 @@ onBeforeUnmount(() => {
       font-size: 20px;
       font-weight: bold;
       color: var(--color-text-primary);
+      pointer-events: none;
     }
 
-    .icon {
-      margin: 0 10px;
+    .header-actions {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .close-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      margin: 0 10px 0 12px;
       font-size: 24px;
       color: var(--color-text-primary);
       cursor: pointer;
+      transition: color 0.2s;
 
       &:hover {
         color: var(--color-text-tertiary);

@@ -3,13 +3,21 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
 
+  runtimeConfig: {
+    blogFeedUrl: process.env.NUXT_BLOG_FEED_URL || (
+      process.env.NODE_ENV === 'production'
+        ? 'https://blog.agou.im/feed/'
+        : 'https://bakablog-astro.pages.dev/feed/'
+    ),
+  },
+
   modules: [
     '@nuxt/content',
     '@nuxt/eslint',
     '@nuxt/fonts',
     '@nuxt/icon',
     '@nuxt/image',
-    '@nuxt/scripts'
+    '@nuxt/scripts',
   ],
   build: {
     transpile: [
