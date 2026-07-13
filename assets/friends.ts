@@ -1,8 +1,11 @@
-import type { WebsiteCardProps } from "~/components/website-card.vue";
+import type { WebsiteCardProps } from '~/components/website-card.vue';
 
 import calandIcon from '~/assets/icons/caland-favicon.png';
+import cosixIcon from '~/assets/icons/cosix-avatar.jpg';
 import cold04Icon from '~/assets/icons/cold04-avatar.png';
+import gelithIcon from '~/assets/icons/gelith-logo.jpg';
 import hatsBlogIcon from '~/assets/icons/hats-blog.webp';
+import oneTwoOneIcon from '~/assets/icons/1212967-avatar.jpg';
 import revincxIcon from '~/assets/icons/revincx-avatar.jpg';
 import shiinaIcon from '~/assets/icons/shiina-avatar.jpg';
 import zhicccIcon from '~/assets/icons/zhiccc-favicon.ico';
@@ -64,12 +67,31 @@ export const friends: WebsiteCardProps[] = [
     link: 'https://cold04.com',
   },
   {
-    iconUrl: '',
+    iconUrl: oneTwoOneIcon,
+    autoDark: false,
     name: '1212967',
     description: '一个屑个人博客',
     host: '1212967.xyz',
     linkActionText,
     link: 'https://1212967.xyz',
+  },
+  {
+    iconUrl: gelithIcon,
+    autoDark: false,
+    name: 'gelith的个人主页',
+    description: '一个热爱计算机的青年',
+    host: 'www.gelith.top',
+    linkActionText,
+    link: 'https://www.gelith.top',
+  },
+  {
+    iconUrl: cosixIcon,
+    autoDark: false,
+    name: '东方众的不知名小站',
+    description: '呐呐呐，你也喜欢二次元？',
+    host: 'cosix.xyz',
+    linkActionText,
+    link: 'https://cosix.xyz',
   },
 ];
 

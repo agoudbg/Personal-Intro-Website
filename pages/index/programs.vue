@@ -1,8 +1,8 @@
 <template>
-  <NuxtLayout name="detail" page-title="项目">
+  <NuxtLayout name="detail" page-title="网站">
     <div class="content">
       <div class="programs-list">
-        <WebsiteCard class="item" v-for="(program, index) in programs" :key="index" :icon-url="program.iconUrl"
+        <WebsiteCard v-for="program in programs" :key="program.link" class="item" :icon-url="program.iconUrl"
           :auto-dark="program.autoDark" :name="program.name" :description="program.description" :host="program.host"
           :link-action-text="program.linkActionText" :link="program.link" />
       </div>

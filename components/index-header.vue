@@ -19,6 +19,10 @@
     width: 40px;
     height: 40px;
     background-color: var(--index-header-icon-background-color);
+    background-image: url('/avatar.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
     border-radius: 50%;
     margin-right: 10px;
   }

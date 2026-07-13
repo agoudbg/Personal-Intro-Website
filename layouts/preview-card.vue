@@ -27,7 +27,7 @@ const link = computed(() => {
     <MicaBackground />
     <div class="card-content">
       <div class="title">
-        <Icon :name="iconName" />
+        <Icon class="title-icon" :name="iconName" />
         <div class="title-text">
           <h2>{{ pageTitle }}</h2>
         </div>
@@ -78,6 +78,11 @@ const link = computed(() => {
       margin: 10px;
       flex-grow: 0;
 
+      .title-icon {
+        font-size: 1.6em;
+        flex-shrink: 0;
+      }
+
       .title-text {
         margin-left: 10px;
         font-size: v-bind(cardRem);
@@ -86,8 +91,8 @@ const link = computed(() => {
 
     .slot {
       width: 100%;
-      height: 100%;
-      flex-grow: 1;
+      min-height: 0;
+      flex: 1;
     }
   }
 }

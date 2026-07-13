@@ -1,8 +1,8 @@
 <template>
-  <NuxtLayout name="detail" page-title="友情链接">
+  <NuxtLayout name="detail" page-title="友链">
     <div class="content">
       <div class="friends-list">
-        <WebsiteCard class="item" v-for="(friend, index) in friends" :key="index" :icon-url="friend.iconUrl"
+        <WebsiteCard v-for="friend in friends" :key="friend.link" class="item" :icon-url="friend.iconUrl"
           :auto-dark="friend.autoDark" :name="friend.name" :description="friend.description" :host="friend.host"
           :link-action-text="friend.linkActionText" :link="friend.link" />
       </div>

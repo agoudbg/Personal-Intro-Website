@@ -6,10 +6,10 @@ const friendsList = randomFriends.slice(0, 4);
 </script>
 
 <template>
-  <NuxtLayout name="preview-card" :page-id="'friends'" page-title="项目" :icon-name="'user'">
+  <NuxtLayout name="preview-card" :page-id="'friends'" page-title="友链" :icon-name="'friends'">
     <div class="content">
       <div class="friends-list">
-        <WebsiteCard class="item" v-for="(friend, index) in friendsList" :key="index" :icon-url="friend.iconUrl"
+        <WebsiteCard v-for="friend in friendsList" :key="friend.link" class="item" :icon-url="friend.iconUrl"
           :auto-dark="friend.autoDark" :name="friend.name" :description="friend.description" :host="friend.host"
           :link-action-text="friend.linkActionText" :link="friend.link" :variant="'preview'" />
       </div>
@@ -35,6 +35,7 @@ const friendsList = randomFriends.slice(0, 4);
 
     .item {
       width: 100%;
+      padding-block: 0.53em;
     }
   }
 }

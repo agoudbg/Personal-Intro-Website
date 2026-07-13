@@ -24,12 +24,14 @@ export default defineNuxtConfig({
     provider: 'server',
     fallbackToApi: false,
     aliases: {
+      blog: 'material-symbols:article-rounded',
       friends: 'material-symbols:group-rounded',
       user: 'material-symbols:person-rounded',
     },
     clientBundle: {
       icons: [
         'material-symbols:arrow-outward-rounded',
+        'material-symbols:article-rounded',
         'material-symbols:close-rounded',
         'material-symbols:globe',
         'material-symbols:group-rounded',

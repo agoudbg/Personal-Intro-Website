@@ -3,10 +3,10 @@ import { programs } from '~/assets/programs';
 </script>
 
 <template>
-  <NuxtLayout name="preview-card" :page-id="'programs'" page-title="好友" :icon-name="'friends'">
+  <NuxtLayout name="preview-card" :page-id="'programs'" page-title="网站" :icon-name="'material-symbols:globe'">
     <div class="content">
       <div class="programs-list">
-        <WebsiteCard class="item" v-for="(program, index) in programs" :key="index" :icon-url="program.iconUrl"
+        <WebsiteCard v-for="program in programs" :key="program.link" class="item" :icon-url="program.iconUrl"
           :auto-dark="program.autoDark" :name="program.name" :description="program.description" :host="program.host"
           :link-action-text="program.linkActionText" :link="program.link" :variant="'preview'" />
       </div>
