@@ -1,10 +1,13 @@
 import type { WebsiteCardProps } from "~/components/website-card.vue";
 
+import anboIcon from '~/assets/icons/anbo-favicon.ico';
+import nmTeamIcon from '~/assets/icons/nmteam-logo.png';
+
 const linkActionText = '访问';
 
 export const programs: WebsiteCardProps[] = [
   {
-    iconUrl: 'https://websiteres.nmteam.xyz/producticon/nmTeam/logo@64.png',
+    iconUrl: nmTeamIcon,
     name: "nmTeam",
     description: 'nmTeam 凭借非凡创意，为世界创造无与伦比的 nm 产品。',
     host: 'nmteam.xyz',
@@ -12,7 +15,7 @@ export const programs: WebsiteCardProps[] = [
     link: 'https://nmteam.xyz',
   },
   {
-    iconUrl: 'https://anbo.space/favicon.ico',
+    iconUrl: anboIcon,
     autoDark: false,
     name: "安播空间",
     description: '电视爱好者聚集地。',

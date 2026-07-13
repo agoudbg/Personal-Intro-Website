@@ -18,6 +18,26 @@ export default defineNuxtConfig({
     ],
   },
 
+  icon: {
+    // All used icons are in the client bundle, so no server collection is needed.
+    serverBundle: false,
+    provider: 'server',
+    fallbackToApi: false,
+    aliases: {
+      friends: 'material-symbols:group-rounded',
+      user: 'material-symbols:person-rounded',
+    },
+    clientBundle: {
+      icons: [
+        'material-symbols:arrow-outward-rounded',
+        'material-symbols:close-rounded',
+        'material-symbols:globe',
+        'material-symbols:group-rounded',
+        'material-symbols:person-rounded',
+      ],
+    },
+  },
+
   css: ['./assets/theme.scss', './assets/basis.scss'],
 
   ssr: false,
