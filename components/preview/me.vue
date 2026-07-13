@@ -25,7 +25,7 @@ import { aboutContent } from '~/assets/about';
   text-align: left;
 
   .channel-handle {
-    color: #0080ff;
+    color: var(--color-accent);
   }
 }
 </style>

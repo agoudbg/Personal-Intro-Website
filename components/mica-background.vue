@@ -91,12 +91,10 @@ onBeforeUnmount(() => {
   }
 });
 
-// Convert Safari opacity
-const safariOpacity = computed(() => {
+// Safari uses the active theme's surface color behind the backdrop filter.
+const safariBackgroundOpacity = computed(() => {
   if (!isSafari.value) return 0;
-  // convert to 16-bit hex
-  const hex = Math.round((1 - props.opacity) * 255).toString(16).padStart(2, '0');
-  return `#ffffff${hex}`;
+  return Math.min(1, Math.max(0, 1 - props.opacity));
 });
 
 const imgSrc = ref(blurred.value.src);
@@ -120,11 +118,11 @@ watch(blurredUpdateDate, () => {
   position: absolute;
   width: 100%;
   height: 100%;
-  background-color: var(--mica-background-color);
+  background-color: var(--color-surface-mica);
   z-index: 0;
 
   &.safari {
-    background-color: v-bind(safariOpacity);
+    background-color: rgb(var(--color-surface-mica-rgb) / v-bind(safariBackgroundOpacity));
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
   }

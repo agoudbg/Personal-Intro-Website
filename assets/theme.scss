@@ -1,50 +1,60 @@
 :root {
-  // basis
-  --page-text-color: #000000;
-  --page-background-color: #ededed;
-  --outline: 2px solid #00adf7da;
-  --selection-background-color: #00adf7da;
-  --selection-text-color: #000000;
+  color-scheme: light;
 
-  // mica
-  --mica-background-color: #ffffff;
+  // Core colors
+  --color-background-page: #e7ebf0;
+  --color-background-canvas: #f7f9fb;
+  --color-surface-mica: #f8fafc;
+  --color-surface-mica-rgb: 248 250 252;
+  --color-surface-avatar: #f3f5f7;
+  --color-surface-hover: rgb(255 255 255 / 48%);
+  --color-surface-active: rgb(255 255 255 / 70%);
+  --color-border-subtle: rgb(255 255 255 / 65%);
 
-  // index
-  --index-background-color: #ffffff;
-  --detail-container-background-color: #ffffff;
+  // Typography and interaction
+  --color-text-primary: #1b2026;
+  --color-text-secondary: #414a55;
+  --color-text-tertiary: #5d6875;
+  --color-accent: #176b9f;
+  --color-focus-ring: #176b9f;
+  --color-selection-background: #c0e1f3;
+  --color-selection-text: #13202a;
 
-  // index header
-  --index-header-icon-background-color: #ffffff;
-  --index-header-text-color: #000000;
+  // Component-specific materials
+  --index-background-image: url('./background_light.png');
+  --preview-card-background-color: #f8fafc;
+  --preview-card-box-shadow: 0 10px 28px rgb(31 50 65 / 16%), 0 2px 6px rgb(31 50 65 / 10%);
+  --header-liquid-background-start: rgb(248 250 252 / 92%);
+  --header-liquid-background-end: rgb(248 250 252 / 0%);
+}
 
-  // preview card
-  --preview-card-box-shadow: 0 4px 8px #00000033;
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
 
-  --header-liquid-background-color-0: #f6f6f6eb;
-  --header-liquid-background-color-1: #F6F6F600;
+    // Core colors
+    --color-background-page: #0f1318;
+    --color-background-canvas: #111820;
+    --color-surface-mica: #1a2027;
+    --color-surface-mica-rgb: 26 32 39;
+    --color-surface-hover: rgb(255 255 255 / 8%);
+    --color-surface-active: rgb(255 255 255 / 14%);
+    --color-border-subtle: rgb(255 255 255 / 18%);
 
-  --text-secondary: #333333;
-  --text-ultra-secondary: #555555;
+    // Typography and interaction
+    --color-text-primary: #f1f4f7;
+    --color-text-secondary: #c5cbd3;
+    --color-text-tertiary: #98a2ad;
+    --color-accent: #7cbadd;
+    --color-focus-ring: #7cbadd;
+    --color-selection-background: #264f66;
+    --color-selection-text: #f5f7fa;
 
-  --light: #ffffffff;
-  --light-90: #ffffffe6;
-  --light-80: #ffffffe6;
-  --light-70: #ffffffb3;
-  --light-60: #ffffff99;
-  --light-50: #ffffff80;
-  --light-40: #ffffff66;
-  --light-30: #ffffff4d;
-  --light-20: #ffffff33;
-  --light-10: #ffffff1a;
-
-  --dark: #000000ff;
-  --dark-90: #000000e6;
-  --dark-80: #000000cc;
-  --dark-70: #000000b3;
-  --dark-60: #00000099;
-  --dark-50: #00000080;
-  --dark-40: #00000066;
-  --dark-30: #0000004d;
-  --dark-20: #00000033;
-  --dark-10: #0000001a;
+    // Component-specific materials
+    --index-background-image: url('./background_dark.png');
+    --preview-card-background-color: #1a2027;
+    --preview-card-box-shadow: 0 12px 32px rgb(0 0 0 / 42%), 0 2px 8px rgb(0 0 0 / 28%);
+    --header-liquid-background-start: rgb(17 23 30 / 94%);
+    --header-liquid-background-end: rgb(17 23 30 / 0%);
+  }
 }

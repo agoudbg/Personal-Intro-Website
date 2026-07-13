@@ -80,44 +80,61 @@ const linkText = computed(() => {
   return props.host || new URL(props.link).host;
 });
 
-const icon = ref<string>(props.iconUrl);
+const icon = shallowRef(props.iconUrl);
 
-const updateIcon = async () => {
-  if (theme.value === 'light' || !props.autoDark) {
-    icon.value = props.iconUrl;
-    return;
-  }
-
-  // Generate Dark icon
-  const img = new Image();
-  img.crossOrigin = 'Anonymous';
-  img.src = props.iconUrl;
-  await new Promise((resolve) => {
-    img.onload = () => {
-      resolve(true);
-    };
+const loadIcon = (source: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = 'Anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Failed to load icon: ${source}`));
+    image.src = source;
   });
-
-  const dark = await convertDarkIcon(img);
-
-  console.log('Dark icon generated:', dark);
-
-  // Convert Blob to data URL
-  const reader = new FileReader();
-  reader.readAsDataURL(dark);
-  reader.onloadend = () => {
-    const res = reader.result;
-    if (res) icon.value = res as string;
-  };
 };
 
-onMounted(async () => {
-  updateIcon();
-});
+const readBlobAsDataUrl = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error('Dark icon conversion returned an invalid data URL.'));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read the converted dark icon.'));
+    reader.readAsDataURL(blob);
+  });
+};
 
-watch(theme, async () => {
-  updateIcon();
-});
+watch(
+  [theme, () => props.iconUrl, () => props.autoDark],
+  async ([currentTheme], _previousValues, onCleanup) => {
+    let cancelled = false;
+    onCleanup(() => {
+      cancelled = true;
+    });
+
+    if (currentTheme === 'light' || !props.autoDark || !props.iconUrl) {
+      icon.value = props.iconUrl;
+      return;
+    }
+
+    try {
+      const sourceImage = await loadIcon(props.iconUrl);
+      const darkIcon = await convertDarkIcon(sourceImage);
+      const dataUrl = await readBlobAsDataUrl(darkIcon);
+      if (!cancelled) icon.value = dataUrl;
+    } catch (error: unknown) {
+      console.error('Failed to generate a dark website icon.', {
+        iconUrl: props.iconUrl,
+        error,
+      });
+      if (!cancelled) icon.value = props.iconUrl;
+    }
+  },
+  { immediate: true },
+);
 
 </script>
 
@@ -139,7 +156,7 @@ watch(theme, async () => {
     overflow: hidden;
     flex-grow: 0;
     flex-shrink: 0;
-    background: var(--light) center center no-repeat;
+    background: var(--color-surface-avatar) center center no-repeat;
     overflow: hidden;
 
     i {
@@ -178,11 +195,11 @@ watch(theme, async () => {
     }
 
     .description {
-      color: var(--text-secondary);
+      color: var(--color-text-secondary);
 
       .description-text {
         font-size: 0.85em;
-        color: var(--text-secondary);
+        color: var(--color-text-secondary);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -225,8 +242,8 @@ watch(theme, async () => {
       font-weight: bold;
       text-decoration: none;
       font-size: 0.9em;
-      border: 0.125em solid #00000000;
-      background-color: #00000000;
+      border: 0.125em solid transparent;
+      background-color: transparent;
       border-radius: 3.125em;
       transition: all 0.3s;
     }
@@ -234,7 +251,7 @@ watch(theme, async () => {
 
   &:hover,
   &:focus-visible {
-    background-color: var(--light-30);
+    background-color: var(--color-surface-hover);
 
     .info {
       gap: 0.3em;
@@ -263,8 +280,8 @@ watch(theme, async () => {
       a {
         padding: 0.625em 0.9375em;
         margin: 0.3125em 0.3125em;
-        background-color: var(--light-50);
-        border-color: var(--light-40);
+        background-color: var(--color-surface-active);
+        border-color: var(--color-border-subtle);
       }
     }
   }

@@ -18,7 +18,7 @@
   .icon {
     width: 40px;
     height: 40px;
-    background-color: var(--index-header-icon-background-color);
+    background-color: var(--color-surface-avatar);
     background-image: url('/avatar.png');
     background-position: center;
     background-repeat: no-repeat;
@@ -30,7 +30,7 @@
   .name {
     font-size: 24px;
     font-weight: bold;
-    color: var(--index-header-text-color);
+    color: var(--color-text-primary);
   }
 }
 </style>

@@ -39,7 +39,7 @@ const props = defineProps({
     right: 0;
     top: 0;
     bottom: 0;
-    mask: linear-gradient(to bottom, var(--header-liquid-background-color-0) 0%, var(--header-liquid-background-color-1) 100%);
+    mask: linear-gradient(to bottom, var(--header-liquid-background-start) 0%, var(--header-liquid-background-end) 100%);
     z-index: 1;
     transition: opacity 0.5s;
   }

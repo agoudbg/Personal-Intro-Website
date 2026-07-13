@@ -1,57 +1,69 @@
-// Make background blurred and save as a new image 
-
 import { createCanvas, loadImage } from 'canvas';
+import { shallowRef, watch } from 'vue';
 
-export const blurred = ref(new Image());
-export const blurredUpdateDate = ref(0);
+export const blurred = shallowRef(new Image());
+export const blurredUpdateDate = shallowRef(0);
 
-function updateBlurredImage() {
-    // if (isSafari.value) return;
+let renderSequence = 0;
 
+async function updateBlurredImage() {
+  const currentRender = ++renderSequence;
+
+  try {
     const canvas = createCanvas(window.innerWidth, window.innerHeight);
-    const ctx = canvas.getContext('2d');
+    const context = canvas.getContext('2d');
+    const image = await loadImage(backgroundImage.value);
 
-    loadImage(backgroundImage.value).then((image) => {
-        // apply blur
-        (ctx as any).filter = 'blur(30px)';
+    if (currentRender !== renderSequence) return;
 
-        // draw image as background-size: cover
-        const { width, height } = image;
-        const aspectRatio = width / height;
-        const { clientWidth, clientHeight } = document.documentElement;
+    // node-canvas supports the filter property even though its public type omits it.
+    (context as unknown as { filter: string }).filter = 'blur(30px)';
 
-        let newWidth = clientWidth;
-        let newHeight = clientHeight;
-        if (clientWidth / clientHeight > aspectRatio) {
-            newHeight = clientWidth / aspectRatio;
-        } else {
-            newWidth = clientHeight * aspectRatio;
-        }
+    // Draw the source with the same cover geometry as the page background.
+    const { width, height } = image;
+    const aspectRatio = width / height;
+    const { clientWidth, clientHeight } = document.documentElement;
 
-        // image corners
-        ctx.drawImage(image, 0, 0, width, height, (clientWidth - newWidth) / 2, (clientHeight - newHeight) / 2, newWidth, newHeight);
-        ctx.drawImage(image, 0, 0, width, height, (clientWidth - newWidth) / 2, (clientHeight - newHeight) / 2, newWidth, newHeight);
-        ctx.drawImage(image, 0, 0, width, height, (clientWidth - newWidth) / 2, (clientHeight - newHeight) / 2, newWidth, newHeight);
-        ctx.drawImage(image, 0, 0, width, height, (clientWidth - newWidth) / 2, (clientHeight - newHeight) / 2, newWidth, newHeight);
-        ctx.drawImage(image, 0, 0, width, height, (clientWidth - newWidth) / 2, (clientHeight - newHeight) / 2, newWidth, newHeight);
+    let renderedWidth = clientWidth;
+    let renderedHeight = clientHeight;
+    if (clientWidth / clientHeight > aspectRatio) {
+      renderedHeight = clientWidth / aspectRatio;
+    } else {
+      renderedWidth = clientHeight * aspectRatio;
+    }
 
-        // save blurred image
-        blurred.value.src = canvas.toDataURL();
-        console.log('Blurred image loaded');
+    const offsetX = (clientWidth - renderedWidth) / 2;
+    const offsetY = (clientHeight - renderedHeight) / 2;
 
-        // update date
-        blurredUpdateDate.value = Date.now();
+    // Repeated draws strengthen the blur while keeping the existing material effect.
+    for (let pass = 0; pass < 5; pass += 1) {
+      context.drawImage(
+        image,
+        0,
+        0,
+        width,
+        height,
+        offsetX,
+        offsetY,
+        renderedWidth,
+        renderedHeight,
+      );
+    }
+
+    blurred.value.src = canvas.toDataURL();
+    blurredUpdateDate.value = Date.now();
+  } catch (error: unknown) {
+    console.error('Failed to render the blurred theme background.', {
+      backgroundImage: backgroundImage.value,
+      error,
     });
+  }
 }
 
-updateBlurredImage();
+void updateBlurredImage();
 
-// Re-draw blurred image on resize
-window.addEventListener('resize', () => {
-    updateBlurredImage();
-});
+window.addEventListener('resize', updateBlurredImage);
 
-// Re-draw blurred image on theme change
 watch(theme, () => {
-    updateBlurredImage();
+  void updateBlurredImage();
 });

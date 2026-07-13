@@ -475,9 +475,9 @@ const getElementOpacity = (element: HTMLElement | null): number => {
 </script>
 
 <template>
-  <div :data-theme="theme">
+  <div>
     <div :class="`index m-${slideMode} ${router.currentRoute.value.name !== 'index' ? 'hide' : ''}`">
-      <div class="background-image" :style="{ backgroundImage: `url(${backgroundImage})` }" />
+      <div class="background-image" />
       <div :class="`index-header-box ${showSpacerHeader ? '' : 'show'} ${slideMode}`">
         <HeaderBlurBackground :class="`backdrop`" :show="showHeaderBackdrop" :opacity="1" />
         <IndexHeader class="index-header" />
@@ -591,7 +591,8 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: var(--index-background-color);
+    background-color: var(--color-background-canvas);
+    background-image: var(--index-background-image);
     background-size: cover;
     background-position: center;
     z-index: -1;

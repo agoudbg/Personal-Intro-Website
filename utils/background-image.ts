@@ -1,7 +1,6 @@
-import backgroundLightImage from './assets/background_light.png';
-import backgroundDarkImage from './assets/background_dark.png';
-
-// If is light mode, set background image to light mode, otherwise dark mode
+import { computed } from 'vue';
+import backgroundDarkImage from '~/assets/background_dark.png';
+import backgroundLightImage from '~/assets/background_light.png';
 
 export const backgroundImage = computed(() => {
     return theme.value === 'light'

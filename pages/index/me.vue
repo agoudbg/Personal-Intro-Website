@@ -38,7 +38,7 @@ import { aboutContent, contactLinks } from '~/assets/about';
   line-height: 1.6;
 
   a {
-    color: #0080ff;
+    color: var(--color-accent);
   }
 }
 
@@ -55,8 +55,8 @@ import { aboutContent, contactLinks } from '~/assets/about';
   height: 2.5em;
   margin-bottom: 0.8em;
   overflow: hidden;
-  color: var(--page-text-color);
-  background-color: var(--dark-10);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-hover);
   border-radius: 999px;
 
   img {

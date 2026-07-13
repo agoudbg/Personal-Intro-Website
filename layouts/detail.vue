@@ -88,17 +88,17 @@ onBeforeUnmount(() => {
       text-align: center;
       font-size: 20px;
       font-weight: bold;
-      color: #000;
+      color: var(--color-text-primary);
     }
 
     .icon {
       margin: 0 10px;
       font-size: 24px;
-      color: #000;
+      color: var(--color-text-primary);
       cursor: pointer;
 
       &:hover {
-        color: #ccc;
+        color: var(--color-text-tertiary);
       }
     }
 

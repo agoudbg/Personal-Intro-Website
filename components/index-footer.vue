@@ -20,7 +20,7 @@ import { cardSize } from '#imports';
 
   .text {
     font-size: 14px;
-    color: #333; // todo
+    color: var(--color-text-tertiary);
     text-align: center;
     line-height: 50px;
   }
