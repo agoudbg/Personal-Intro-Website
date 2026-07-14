@@ -1,94 +1,103 @@
 <script lang="ts" setup>
 import { blurred, isSafari as isSafariRef } from '#imports';
 
-const props = defineProps({
-  opacity: {
-    type: Number,
-    default: 0.2,
-  },
-  forceMicaMode: {
-    type: Boolean,
-    default: false,
-  },
+interface Props {
+  opacity?: number;
+  forceMicaMode?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  opacity: 0.2,
+  forceMicaMode: false,
 });
 
-const id = ref(Math.random().toString(36).substring(2, 15));
+const micaElement = useTemplateRef<HTMLElement>('mica');
+const backgroundImageElement = useTemplateRef<HTMLImageElement>('background-image');
 
 const isSafari = computed(() => {
   return isSafariRef.value /* && !props.forceMicaMode */;
 });
 
-const top = ref('0px');
-const left = ref('0px');
+const VIEWPORT_OVERSCAN_PX = 2;
+const MIN_VISIBLE_SCALE = 0.01;
+
+let animationFrameId: number | undefined;
+let resizeObserver: ResizeObserver | undefined;
+let lastGeometry = '';
 
 const updatePosition = () => {
   if (isSafari.value) return;
 
-  const element = document.getElementById(id.value);
+  const element = micaElement.value;
+  const image = backgroundImageElement.value;
 
-  if (!element) return;
+  if (!element || !image) return;
 
-  const { top: elementTop, left: elementLeft } = element.getBoundingClientRect();
+  const rect = element.getBoundingClientRect();
+  const localWidth = element.offsetWidth;
+  const localHeight = element.offsetHeight;
 
-  top.value = `-${elementTop}px`;
-  left.value = `-${elementLeft}px`;
+  if (localWidth <= 0 || localHeight <= 0) return;
 
-  console.log('updatePosition', { top: top.value, left: left.value });
+  const scaleX = rect.width / localWidth;
+  const scaleY = rect.height / localHeight;
+
+  // A card is edge-on halfway through its flip animation. Retain the last valid
+  // geometry instead of producing extremely large dimensions near scale zero.
+  if (
+    !Number.isFinite(scaleX)
+    || !Number.isFinite(scaleY)
+    || scaleX < MIN_VISIBLE_SCALE
+    || scaleY < MIN_VISIBLE_SCALE
+  ) return;
+
+  const inverseScaleX = 1 / scaleX;
+  const inverseScaleY = 1 / scaleY;
+  const left = (-rect.left - VIEWPORT_OVERSCAN_PX) * inverseScaleX;
+  const top = (-rect.top - VIEWPORT_OVERSCAN_PX) * inverseScaleY;
+  const width = window.innerWidth + VIEWPORT_OVERSCAN_PX * 2;
+  const height = window.innerHeight + VIEWPORT_OVERSCAN_PX * 2;
+  const geometry = [left, top, inverseScaleX, inverseScaleY, width, height]
+    .map((value) => value.toFixed(3))
+    .join(':');
+
+  if (geometry === lastGeometry) return;
+
+  lastGeometry = geometry;
+  image.style.width = `${width}px`;
+  image.style.height = `${height}px`;
+  image.style.transform = `matrix(${inverseScaleX}, 0, 0, ${inverseScaleY}, ${left}, ${top})`;
 };
 
-updatePosition();
-
-// watch element resize
-const observer = new ResizeObserver(() => {
+const trackPosition = () => {
   updatePosition();
-});
+  animationFrameId = window.requestAnimationFrame(trackPosition);
+};
 
-
-// watch window resize
-window.addEventListener('resize', () => {
+const handleViewportResize = () => {
+  lastGeometry = '';
   updatePosition();
-});
+};
 
-// watch element position change
 onMounted(() => {
   if (isSafari.value) return;
 
-  const element = document.getElementById(id.value);
+  const element = micaElement.value;
+  if (!element) return;
 
-  if (element) {
-    observer.observe(element);
-  }
-
-  // watch all parents' scroll event
-  let parent = document.getElementById(id.value)?.parentElement;
-
-  while (parent) {
-    parent.addEventListener('scroll', updatePosition);
-    parent = parent.parentElement;
-  }
+  resizeObserver = new ResizeObserver(handleViewportResize);
+  resizeObserver.observe(element);
+  window.addEventListener('resize', handleViewportResize);
+  animationFrameId = window.requestAnimationFrame(trackPosition);
 });
 
 onBeforeUnmount(() => {
-  if (isSafari.value) return;
-
-  const element = document.getElementById(id.value);
-
-  if (element) {
-    observer.unobserve(element);
+  if (animationFrameId !== undefined) {
+    window.cancelAnimationFrame(animationFrameId);
   }
 
-  // watch window resize
-  window.removeEventListener('resize', () => {
-    updatePosition();
-  });
-
-  // watch all parents' scroll event
-  let parent = document.getElementById(id.value)?.parentElement;
-
-  while (parent) {
-    parent.addEventListener('scroll', updatePosition);
-    parent = parent.parentElement;
-  }
+  resizeObserver?.disconnect();
+  window.removeEventListener('resize', handleViewportResize);
 });
 
 // Safari uses the active theme's surface color behind the backdrop filter.
@@ -97,24 +106,32 @@ const safariBackgroundOpacity = computed(() => {
   return Math.min(1, Math.max(0, 1 - props.opacity));
 });
 
-const imgSrc = ref(blurred.value.src);
+const imgSrc = shallowRef(blurred.value.src);
 
 watch(blurredUpdateDate, () => {
-  console.log('watch blurredUpdateDate', blurredUpdateDate.value);
   imgSrc.value = blurred.value.src;
+  lastGeometry = '';
   updatePosition();
 });
 
 </script>
 
 <template>
-  <div :id="id" :class="`micaBackground ${isSafari ? 'safari' : ''}`">
-    <img v-if="!isSafari" :class="`backgroundImage`" :src="imgSrc">
+  <div ref="mica" class="mica-background" :class="{ safari: isSafari }">
+    <img
+      v-if="!isSafari"
+      ref="background-image"
+      class="background-image"
+      :src="imgSrc"
+      alt=""
+      aria-hidden="true"
+      @load="handleViewportResize"
+    >
   </div>
 </template>
 
 <style lang="scss" scoped>
-.micaBackground {
+.mica-background {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -127,13 +144,18 @@ watch(blurredUpdateDate, () => {
     -webkit-backdrop-filter: blur(30px);
   }
 
-  .backgroundImage {
+  .background-image {
     position: absolute;
-    top: min(max(v-bind(top), -100vh), 100vh);
-    left: min(max(v-bind(left), -100vw), 100vw);
+    top: 0;
+    left: 0;
     width: 100vw;
     height: 100vh;
-    opacity: v-bind(opacity);
+    display: block;
+    max-width: none;
+    opacity: v-bind('props.opacity');
+    pointer-events: none;
+    transform-origin: top left;
+    will-change: transform;
     z-index: 0;
   }
 }
