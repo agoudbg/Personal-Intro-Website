@@ -1,9 +1,13 @@
 <script lang="ts" setup>
 import { aboutContent } from '~/assets/about';
+
+const props = withDefaults(defineProps<{ loading?: boolean }>(), {
+  loading: false,
+});
 </script>
 
 <template>
-  <NuxtLayout name="preview-card" :page-id="'me'" page-title="关于" :icon-name="'user'">
+  <NuxtLayout name="preview-card" :page-id="'me'" page-title="关于" :icon-name="'user'" :loading="props.loading">
     <div class="intro-preview">
       <p>{{ aboutContent.greeting }}</p>
       <p>{{ aboutContent.introduction }}</p>

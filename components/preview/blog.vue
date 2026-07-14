@@ -1,11 +1,15 @@
 <script lang="ts" setup>
+const props = withDefaults(defineProps<{ loading?: boolean }>(), {
+  loading: false,
+});
+
 const { articles, errorMessage, isLoading } = useBlogArticles();
 
 const recentArticles = computed(() => articles.value.slice(0, 3));
 </script>
 
 <template>
-  <NuxtLayout name="preview-card" :page-id="'blog'" page-title="博客" :icon-name="'blog'">
+  <NuxtLayout name="preview-card" :page-id="'blog'" page-title="博客" :icon-name="'blog'" :loading="props.loading">
     <div class="blog-preview">
       <div v-if="isLoading" class="status">正在加载最近文章…</div>
       <div v-else-if="errorMessage" class="status error">暂时无法加载博客文章</div>

@@ -1,12 +1,17 @@
 <script lang="ts" setup>
 import { randomFriends } from '~/assets/friends';
 
+const props = withDefaults(defineProps<{ loading?: boolean }>(), {
+  loading: false,
+});
+
 // Select 4 random friends for preview
 const friendsList = randomFriends.slice(0, 4);
 </script>
 
 <template>
-  <NuxtLayout name="preview-card" :page-id="'friends'" page-title="友链" :icon-name="'friends'">
+  <NuxtLayout name="preview-card" :page-id="'friends'" page-title="友链" :icon-name="'friends'"
+    :loading="props.loading">
     <div class="content">
       <div class="friends-list">
         <WebsiteCard v-for="friend in friendsList" :key="friend.link" class="item" :icon-url="friend.iconUrl"

@@ -4,7 +4,12 @@ import { ScrollSlide } from 'scroll-slides';
 import 'scroll-slides/dist/scroll-slides.css';
 
 import Me from '~/components/preview/me.vue';
-import type { RouteLocationNormalizedGeneric, RouteLocationNormalizedLoadedGeneric } from 'vue-router';
+import {
+  isNavigationFailure,
+  NavigationFailureType,
+  type RouteLocationNormalizedGeneric,
+  type RouteLocationNormalizedLoadedGeneric,
+} from 'vue-router';
 import Friends from '~/components/preview/friends.vue';
 import Blog from '~/components/preview/blog.vue';
 import Programs from '~/components/preview/programs.vue';
@@ -12,6 +17,8 @@ import Programs from '~/components/preview/programs.vue';
 useHead({
   title: '关于 agou',
 });
+
+const { isRefreshing: isBlogArticlesRefreshing } = useBlogArticles();
 
 // Calculate Spacer Header
 const spacerHeaderScalePercent = ref(1);
@@ -22,7 +29,88 @@ const showHeaderBackdrop = ref(false);
 const animationCard = shallowRef<Component | undefined>(undefined);
 const currentCardAnimationEndAt = ref(0);
 const animationObserverTransform = ref('');
+const isDetailAnimationPreparing = shallowRef(false);
+type PreviewCardId = 'me' | 'programs' | 'blog' | 'friends';
+const cardLoadingIndicatorId = shallowRef<PreviewCardId>();
 let activeCardAnimationCleanup: (() => void) | undefined;
+let cardAnimationSetupId = 0;
+let animationCardOwnerSetupId: number | undefined;
+let skippedCardAnimationPath: string | undefined;
+let cardLoadingIndicatorTimerId: number | undefined;
+let cardLoadingIndicatorRequestId = 0;
+
+const detailAnimationTargetSelector = '[data-card-animation-content]';
+const detailAnimationTargetTimeout = 10_000;
+const cardLoadingIndicatorDelay = 500;
+// Bound preparation time even while the delayed indicator provides feedback.
+const cardDataReadyTimeout = 10_000;
+
+const waitForAnimationFrame = () => new Promise<void>((resolve) => {
+  requestAnimationFrame(() => resolve());
+});
+
+const stopCardLoadingIndicator = () => {
+  cardLoadingIndicatorRequestId += 1;
+  if (cardLoadingIndicatorTimerId !== undefined) window.clearTimeout(cardLoadingIndicatorTimerId);
+  cardLoadingIndicatorTimerId = undefined;
+  cardLoadingIndicatorId.value = undefined;
+};
+
+const startCardLoadingIndicator = (cardId: PreviewCardId) => {
+  stopCardLoadingIndicator();
+  const requestId = cardLoadingIndicatorRequestId;
+
+  cardLoadingIndicatorTimerId = window.setTimeout(() => {
+    cardLoadingIndicatorTimerId = undefined;
+    if (requestId === cardLoadingIndicatorRequestId) cardLoadingIndicatorId.value = cardId;
+  }, cardLoadingIndicatorDelay);
+};
+
+const getPreviewCardId = (routeName: RouteLocationNormalizedGeneric['name']): PreviewCardId | undefined => {
+  switch (routeName) {
+    case 'index-me':
+      return 'me';
+    case 'index-programs':
+      return 'programs';
+    case 'index-blog':
+      return 'blog';
+    case 'index-friends':
+      return 'friends';
+    default:
+      return undefined;
+  }
+};
+
+const waitForCardDataReady = async (
+  cardName: RouteLocationNormalizedGeneric['name'],
+  setupId: number,
+): Promise<boolean> => {
+  if (cardName !== 'index-blog') return true;
+
+  const timeoutAt = performance.now() + cardDataReadyTimeout;
+  while (isBlogArticlesRefreshing.value && setupId === cardAnimationSetupId && performance.now() < timeoutAt) {
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 50);
+    });
+  }
+
+  return !isBlogArticlesRefreshing.value;
+};
+
+const waitForDetailAnimationTarget = async (
+  detailContainer: HTMLElement,
+  setupId: number,
+): Promise<HTMLElement | null> => {
+  const timeoutAt = performance.now() + detailAnimationTargetTimeout;
+
+  while (setupId === cardAnimationSetupId && performance.now() < timeoutAt) {
+    const target = detailContainer.querySelector<HTMLElement>(detailAnimationTargetSelector);
+    if (target?.isConnected) return target;
+    await waitForAnimationFrame();
+  }
+
+  return null;
+};
 
 const cleanupActiveCardAnimation = () => {
   const cleanup = activeCardAnimationCleanup;
@@ -31,8 +119,12 @@ const cleanupActiveCardAnimation = () => {
 };
 
 const resetAnimationArtifacts = () => {
+  cardAnimationSetupId += 1;
   cleanupActiveCardAnimation();
+  animationCardOwnerSetupId = undefined;
   animationCard.value = undefined;
+  isDetailAnimationPreparing.value = false;
+  stopCardLoadingIndicator();
   animationObserverTransform.value = 'translate(0px, 0px) scale(1)';
   currentCardAnimationEndAt.value = 0;
 };
@@ -84,6 +176,7 @@ onMounted(() => {
   onUnmounted(() => {
     slideEl?.removeEventListener('scroll', slideScrollHandler);
     window.removeEventListener('resize', windowResizeHandler);
+    stopCardLoadingIndicator();
   });
 });
 
@@ -97,12 +190,42 @@ router.beforeEach(async (to, from) => {
   await routerChange('b', to, from);
 });
 
-router.afterEach(async (to, from) => {
+router.afterEach(async (to, from, failure) => {
+  if (failure) {
+    // A newer navigation owns the shared animation state after cancelling this one.
+    if (!isNavigationFailure(failure, NavigationFailureType.cancelled)) resetAnimationArtifacts();
+    return;
+  }
   await routerChange('a', to, from);
 });
 
 const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGeneric, from: RouteLocationNormalizedLoadedGeneric) {
+  const setupId = ++cardAnimationSetupId;
   console.log('router change', to, from);
+
+  if (e === 'b') skippedCardAnimationPath = undefined;
+  if (e === 'a' && skippedCardAnimationPath === to.fullPath) {
+    skippedCardAnimationPath = undefined;
+    resetAnimationArtifacts();
+    return;
+  }
+
+  if (e === 'b' && from.name === 'index' && to.name !== 'index') {
+    const targetCardId = getPreviewCardId(to.name);
+    if (targetCardId) startCardLoadingIndicator(targetCardId);
+  }
+
+  if (e === 'b' && (from.name === 'index' || to.name === 'index')) {
+    const cardName = to.name === 'index' ? from.name : to.name;
+    const isCardDataReady = await waitForCardDataReady(cardName, setupId);
+    if (setupId !== cardAnimationSetupId) return;
+    if (!isCardDataReady) {
+      skippedCardAnimationPath = to.fullPath;
+      console.warn('Skipping card animation because its data is still refreshing.', { cardName });
+      resetAnimationArtifacts();
+      return;
+    }
+  }
 
   if (from.name !== 'index' && to.name !== 'index') {
     resetAnimationArtifacts();
@@ -114,10 +237,20 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     await new Promise((resolve) => {
       setTimeout(resolve, remainingAnimationTime + 200);
     });
+    if (setupId !== cardAnimationSetupId) return;
   }
   cleanupActiveCardAnimation();
 
   const isClose = to.name === 'index';
+
+  if (isClose && e === 'b' && isDetailAnimationPreparing.value) {
+    skippedCardAnimationPath = to.fullPath;
+    return;
+  }
+
+  if (!isClose && e === 'b') {
+    isDetailAnimationPreparing.value = true;
+  }
 
   console.log('rdata', Date.now() % 100000, e, isClose ? 'close' : 'open', to.name, from.name);
 
@@ -135,41 +268,66 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     : 'cubic-bezier(0.77, 0, 0.175, 1)';
 
   const cardName = isClose ? from.name : to.name;
+  let nextAnimationCard: Component | undefined;
   switch (cardName) {
     case 'index-me':
-      animationCard.value = Me;
+      nextAnimationCard = Me;
       break;
     case 'index-friends':
-      animationCard.value = Friends;
+      nextAnimationCard = Friends;
       break;
     case 'index-blog':
-      animationCard.value = Blog;
+      nextAnimationCard = Blog;
       break;
     case 'index-programs':
-      animationCard.value = Programs;
+      nextAnimationCard = Programs;
       break;
     default:
-      animationCard.value = undefined;
+      nextAnimationCard = undefined;
   }
 
   const originalPreviewCard: HTMLElement | null = document.body.querySelector(`.slide-item .card[href*="${isClose ? from.path : to.path}"]`);
-  if (!originalPreviewCard) {
+  const detailContainer: HTMLElement | null = document.body.querySelector('.detail-container');
+  if (!nextAnimationCard || !originalPreviewCard || !detailContainer) {
+    resetAnimationArtifacts();
+    return;
+  }
+
+  const detailAnimationTarget = await waitForDetailAnimationTarget(detailContainer, setupId);
+  if (setupId !== cardAnimationSetupId) return;
+  if (!detailAnimationTarget) {
+    resetAnimationArtifacts();
+    return;
+  }
+
+  if (!originalPreviewCard.isConnected) {
     resetAnimationArtifacts();
     return;
   }
   const originalPreviewCardRect = originalPreviewCard.getBoundingClientRect();
 
+  animationCardOwnerSetupId = setupId;
+  animationCard.value = nextAnimationCard;
+
   // if has animation card, calculate from/to status for animation card, detail container and original preview card
   await nextTick(() => {
+    if (setupId !== cardAnimationSetupId) {
+      if (animationCardOwnerSetupId === setupId) {
+        animationCardOwnerSetupId = undefined;
+        animationCard.value = undefined;
+      }
+      return;
+    }
+
     if (animationCard.value) {
       const animationCardElement: HTMLElement | null = document.body.querySelector('.animation-card-container .card');
-      const detailContainer: HTMLElement | null = document.body.querySelector('.detail-container');
       console.log(animationCardElement, detailContainer, originalPreviewCard);
 
       if (!animationCardElement || !detailContainer || !originalPreviewCard) {
         resetAnimationArtifacts();
         return;
       }
+
       const detailContainerRect = detailContainer.getBoundingClientRect();
       const sourcePreviewCardRect = originalPreviewCardRect;
       const animationCardNaturalWidth = animationCardElement.offsetWidth;
@@ -318,9 +476,6 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         [isClose ? 0 : 1, detailContainerContentTo],
       ];
 
-      // animation
-      currentCardAnimationEndAt.value = Date.now() + animationTime;
-
       const styleElement = document.createElement('style');
       styleElement.innerHTML = `
       @keyframes animationCard {
@@ -386,8 +541,9 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         animation: detailContainer ${animationTime}ms ${animationTimingFunction} forwards;
       }
 
-      .detail-container .detail-nuxt-page .content {
+      .detail-container ${detailAnimationTargetSelector} {
         animation: detailContainerContent ${animationTime}ms ${animationTimingFunction} forwards;
+        transform-origin: top center;
       }
 
       .slide-item .card[href*="${isClose ? from.path : to.path}"] {
@@ -397,7 +553,10 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
       console.log(styleElement.innerHTML);
 
+      currentCardAnimationEndAt.value = Date.now() + animationTime;
       document.head.appendChild(styleElement);
+      stopCardLoadingIndicator();
+      if (!isClose) isDetailAnimationPreparing.value = false;
 
       let animationObserverRafId: number | undefined;
       let cleanupTimerId: number | undefined;
@@ -412,9 +571,12 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         if (styleElement.isConnected) styleElement.remove();
 
         if (activeCardAnimationCleanup === cleanupAnimation) activeCardAnimationCleanup = undefined;
-        animationCard.value = undefined;
-        animationObserverTransform.value = 'translate(0px, 0px) scale(1)';
-        currentCardAnimationEndAt.value = 0;
+        if (animationCardOwnerSetupId === setupId) {
+          animationCardOwnerSetupId = undefined;
+          animationCard.value = undefined;
+          animationObserverTransform.value = 'translate(0px, 0px) scale(1)';
+          currentCardAnimationEndAt.value = 0;
+        }
       };
 
       activeCardAnimationCleanup = cleanupAnimation;
@@ -450,6 +612,8 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     }
   });
 
+  if (setupId !== cardAnimationSetupId) return;
+
   // if is before router change, wait
   if (e === 'b') {
     await new Promise((resolve => setTimeout(resolve, animationHalfTime + 10)));
@@ -476,14 +640,16 @@ const getElementOpacity = (element: HTMLElement | null): number => {
 
 <template>
   <div>
-    <div :class="`index m-${slideMode} ${router.currentRoute.value.name !== 'index' ? 'hide' : ''}`">
+    <div
+      :class="`index m-${slideMode} ${router.currentRoute.value.name !== 'index' && !isDetailAnimationPreparing ? 'hide' : ''}`">
       <div class="background-image" />
       <div :class="`index-header-box ${showSpacerHeader ? '' : 'show'} ${slideMode}`">
         <HeaderBlurBackground :class="`backdrop`" :show="showHeaderBackdrop" :opacity="1" />
         <IndexHeader class="index-header" />
       </div>
       <div class="slider-box">
-        <ScrollSlide :class="`slide m-${slideMode} ${router.currentRoute.value.name !== 'index' ? 'hide' : ''}`"
+        <ScrollSlide
+          :class="`slide m-${slideMode} ${router.currentRoute.value.name !== 'index' && !isDetailAnimationPreparing ? 'hide' : ''}`"
           :direction="'vertical'" :item-count="slideMode === 2 ? 3 : slideMode === 1 ? 4 : 6"
           :scale-start-percent="0.8">
           <template #item-0>
@@ -494,42 +660,42 @@ const getElementOpacity = (element: HTMLElement | null): number => {
 
           <template #item-1>
             <div v-if="slideMode === 0" class="slide-item">
-              <PreviewMe />
+              <PreviewMe :loading="cardLoadingIndicatorId === 'me'" />
             </div>
             <div v-else-if="slideMode === 1" class="slide-items">
               <div class="slide-item">
-                <PreviewMe />
+                <PreviewMe :loading="cardLoadingIndicatorId === 'me'" />
               </div>
               <div class="slide-item">
-                <PreviewPrograms />
+                <PreviewPrograms :loading="cardLoadingIndicatorId === 'programs'" />
               </div>
             </div>
             <div v-else class="slide-items">
               <div class="slide-item">
-                <PreviewMe />
+                <PreviewMe :loading="cardLoadingIndicatorId === 'me'" />
               </div>
               <div class="slide-item">
-                <PreviewPrograms />
+                <PreviewPrograms :loading="cardLoadingIndicatorId === 'programs'" />
               </div>
               <div class="slide-item">
-                <PreviewBlog />
+                <PreviewBlog :loading="cardLoadingIndicatorId === 'blog'" />
               </div>
               <div class="slide-item">
-                <PreviewFriends />
+                <PreviewFriends :loading="cardLoadingIndicatorId === 'friends'" />
               </div>
             </div>
           </template>
 
           <template #item-2>
             <div v-if="slideMode === 0" class="slide-item">
-              <PreviewPrograms />
+              <PreviewPrograms :loading="cardLoadingIndicatorId === 'programs'" />
             </div>
             <div v-else-if="slideMode === 1" class="slide-items">
               <div class="slide-item">
-                <PreviewBlog />
+                <PreviewBlog :loading="cardLoadingIndicatorId === 'blog'" />
               </div>
               <div class="slide-item">
-                <PreviewFriends />
+                <PreviewFriends :loading="cardLoadingIndicatorId === 'friends'" />
               </div>
             </div>
             <div v-else>
@@ -539,7 +705,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
 
           <template #item-3>
             <div v-if="slideMode === 0" class="slide-item">
-              <PreviewBlog />
+              <PreviewBlog :loading="cardLoadingIndicatorId === 'blog'" />
             </div>
             <div v-else>
               <IndexFooter />
@@ -548,7 +714,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
 
           <template #item-4>
             <div class="slide-item">
-              <PreviewFriends />
+              <PreviewFriends :loading="cardLoadingIndicatorId === 'friends'" />
             </div>
           </template>
 
@@ -559,10 +725,11 @@ const getElementOpacity = (element: HTMLElement | null): number => {
       </div>
     </div>
     <div class="animations-container">
-      <div :class="`detail-container m-${slideMode} ${router.currentRoute.value.name !== 'index' ? '' : 'hide'}`">
+      <div
+        :class="`detail-container m-${slideMode} ${router.currentRoute.value.name !== 'index' ? '' : 'hide'} ${isDetailAnimationPreparing ? 'preparing' : ''}`">
         <NuxtPage class="detail-nuxt-page" />
       </div>
-      <div class="animation-card-container">
+      <div :class="`animation-card-container ${isDetailAnimationPreparing ? 'preparing' : ''}`">
         <Component :is="animationCard" />
       </div>
     </div>
@@ -736,6 +903,11 @@ const getElementOpacity = (element: HTMLElement | null): number => {
       pointer-events: none;
     }
 
+    &.preparing {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     &.m-2 {
       top: 50%;
       width: 700px;
@@ -755,7 +927,9 @@ const getElementOpacity = (element: HTMLElement | null): number => {
   }
 
   .animation-card-container {
-    // opacity: 0;
+    &.preparing {
+      visibility: hidden;
+    }
   }
 }
 </style>

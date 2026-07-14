@@ -1,9 +1,14 @@
 <script lang="ts" setup>
 import { programs } from '~/assets/programs';
+
+const props = withDefaults(defineProps<{ loading?: boolean }>(), {
+  loading: false,
+});
 </script>
 
 <template>
-  <NuxtLayout name="preview-card" :page-id="'programs'" page-title="网站" :icon-name="'material-symbols:globe'">
+  <NuxtLayout name="preview-card" :page-id="'programs'" page-title="网站" :icon-name="'material-symbols:globe'"
+    :loading="props.loading">
     <div class="content">
       <div class="programs-list">
         <WebsiteCard v-for="program in programs" :key="program.link" class="item" :icon-url="program.iconUrl"

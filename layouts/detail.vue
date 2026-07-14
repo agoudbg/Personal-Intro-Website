@@ -55,7 +55,7 @@ onBeforeUnmount(() => {
         <Icon name="material-symbols:close-rounded" />
       </NuxtLink>
     </div>
-    <div :id="contentElementId" class="content">
+    <div :id="contentElementId" class="content" data-card-animation-content>
       <slot />
     </div>
   </div>

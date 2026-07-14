@@ -1,17 +1,13 @@
 <script lang="ts" setup>
-const props = defineProps({
-  pageId: {
-    type: String,
-    required: true,
-  },
-  pageTitle: {
-    type: String,
-    required: true,
-  },
-  iconName: {
-    type: String,
-    required: true,
-  },
+interface Props {
+  pageId: string;
+  pageTitle: string;
+  iconName: string;
+  loading?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  loading: false,
 });
 
 const { pageId } = toRefs(props);
@@ -23,7 +19,7 @@ const link = computed(() => {
 </script>
 
 <template>
-  <NuxtLink class="card" :to="link">
+  <NuxtLink class="card" :to="link" :aria-busy="props.loading || undefined">
     <MicaBackground />
     <div class="card-content">
       <div class="title">
@@ -35,6 +31,10 @@ const link = computed(() => {
       <div class="slot">
         <slot />
       </div>
+    </div>
+    <div v-if="props.loading" class="card-loading-indicator" role="status" aria-live="polite"
+      aria-label="正在加载详情">
+      <Icon class="card-loading-indicator-icon" name="material-symbols:progress-activity" aria-hidden="true" />
     </div>
   </NuxtLink>
 </template>
@@ -94,6 +94,40 @@ const link = computed(() => {
       min-height: 0;
       flex: 1;
     }
+  }
+
+  .card-loading-indicator {
+    position: absolute;
+    top: clamp(12px, 1em, 16px);
+    right: clamp(12px, 1em, 16px);
+    z-index: 2;
+    width: clamp(28px, 2em, 32px);
+    height: clamp(28px, 2em, 32px);
+    display: grid;
+    place-items: center;
+    color: var(--color-accent);
+    background-color: var(--color-surface-active);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 16%);
+    pointer-events: none;
+
+    .card-loading-indicator-icon {
+      font-size: clamp(18px, 1.3em, 20px);
+      animation: card-loading-indicator-spin 0.9s linear infinite;
+    }
+  }
+}
+
+@keyframes card-loading-indicator-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card .card-loading-indicator-icon {
+    animation: none;
   }
 }
 </style>

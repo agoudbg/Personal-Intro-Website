@@ -125,11 +125,13 @@ export const useBlogArticles = () => {
   }
 
   const isLoading = computed(() => status.value === 'loading' && articles.value.length === 0);
+  const isRefreshing = computed(() => status.value === 'loading');
 
   return {
     articles: readonly(articles),
     errorMessage: readonly(errorMessage),
     isLoading,
+    isRefreshing,
     refresh,
   };
 };

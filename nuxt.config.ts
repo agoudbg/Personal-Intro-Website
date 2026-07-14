@@ -44,6 +44,7 @@ export default defineNuxtConfig({
         'material-symbols:globe',
         'material-symbols:group-rounded',
         'material-symbols:person-rounded',
+        'material-symbols:progress-activity',
       ],
     },
   },
