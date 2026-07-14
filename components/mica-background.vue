@@ -18,12 +18,15 @@ const isSafari = computed(() => {
   return isSafariRef.value /* && !props.forceMicaMode */;
 });
 
-const VIEWPORT_OVERSCAN_PX = 2;
 const MIN_VISIBLE_SCALE = 0.01;
 
 let animationFrameId: number | undefined;
+let scrollAnimationFrameId: number | undefined;
 let resizeObserver: ResizeObserver | undefined;
 let lastGeometry = '';
+let isMounted = false;
+let scrollUpdateQueued = false;
+const scrollParents: HTMLElement[] = [];
 
 const updatePosition = () => {
   if (isSafari.value) return;
@@ -53,10 +56,10 @@ const updatePosition = () => {
 
   const inverseScaleX = 1 / scaleX;
   const inverseScaleY = 1 / scaleY;
-  const left = (-rect.left - VIEWPORT_OVERSCAN_PX) * inverseScaleX;
-  const top = (-rect.top - VIEWPORT_OVERSCAN_PX) * inverseScaleY;
-  const width = window.innerWidth + VIEWPORT_OVERSCAN_PX * 2;
-  const height = window.innerHeight + VIEWPORT_OVERSCAN_PX * 2;
+  const left = (-rect.left - MICA_TEXTURE_BLEED_PX) * inverseScaleX;
+  const top = (-rect.top - MICA_TEXTURE_BLEED_PX) * inverseScaleY;
+  const width = window.innerWidth + MICA_TEXTURE_BLEED_PX * 2;
+  const height = window.innerHeight + MICA_TEXTURE_BLEED_PX * 2;
   const geometry = [left, top, inverseScaleX, inverseScaleY, width, height]
     .map((value) => value.toFixed(3))
     .join(':');
@@ -79,25 +82,63 @@ const handleViewportResize = () => {
   updatePosition();
 };
 
+const handleScroll = () => {
+  if (scrollUpdateQueued) return;
+  scrollUpdateQueued = true;
+
+  // ScrollSlide schedules its transform from the same scroll event. Deferring
+  // registration until the event finishes makes this rAF run after its update.
+  queueMicrotask(() => {
+    if (!isMounted) {
+      scrollUpdateQueued = false;
+      return;
+    }
+
+    scrollAnimationFrameId = window.requestAnimationFrame(() => {
+      scrollAnimationFrameId = undefined;
+      scrollUpdateQueued = false;
+      updatePosition();
+    });
+  });
+};
+
 onMounted(() => {
   if (isSafari.value) return;
 
   const element = micaElement.value;
   if (!element) return;
 
+  isMounted = true;
   resizeObserver = new ResizeObserver(handleViewportResize);
   resizeObserver.observe(element);
   window.addEventListener('resize', handleViewportResize);
+
+  let parent = element.parentElement;
+  while (parent) {
+    parent.addEventListener('scroll', handleScroll, { passive: true });
+    scrollParents.push(parent);
+    parent = parent.parentElement;
+  }
+
   animationFrameId = window.requestAnimationFrame(trackPosition);
 });
 
 onBeforeUnmount(() => {
+  isMounted = false;
+
   if (animationFrameId !== undefined) {
     window.cancelAnimationFrame(animationFrameId);
+  }
+  if (scrollAnimationFrameId !== undefined) {
+    window.cancelAnimationFrame(scrollAnimationFrameId);
   }
 
   resizeObserver?.disconnect();
   window.removeEventListener('resize', handleViewportResize);
+  scrollParents.forEach((parent) => {
+    parent.removeEventListener('scroll', handleScroll);
+  });
+  scrollParents.length = 0;
 });
 
 // Safari uses the active theme's surface color behind the backdrop filter.
