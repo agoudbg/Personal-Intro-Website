@@ -1,5 +1,12 @@
 :root {
+  --app-viewport-height: 100vh;
   --font-family: 'PingFang SC', Microsoft Yahei, HanHei SC, Arial, 'San Francisco', system-ui, sans-serif;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-viewport-height: 100dvh;
+  }
 }
 
 body {

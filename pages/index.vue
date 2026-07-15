@@ -831,7 +831,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: var(--app-viewport-height);
   overflow: hidden;
   transition: border-radius 0.3s, transform 0.3s;
 
@@ -846,7 +846,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100%;
     background-color: var(--color-background-canvas);
     background-image: var(--index-background-image);
     background-size: cover;
@@ -885,7 +885,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100%;
 
     &::-webkit-scrollbar {
       display: none;
@@ -935,7 +935,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     .spacer {
       position: relative;
       width: 100%;
-      height: max(200px, calc(100vh - (v-bind(cardSize) * 1) - 40px));
+      height: max(200px, calc(var(--app-viewport-height) - (v-bind(cardSize) * 1) - 40px));
       opacity: 0;
 
       &.show {
@@ -950,7 +950,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     }
 
     &.m-2 .spacer {
-      height: max(200px, calc((100vh - (v-bind(cardSize) * 1.25)) / 2 - 20px));
+      height: max(200px, calc((var(--app-viewport-height) - (v-bind(cardSize) * 1.25)) / 2 - 20px));
     }
   }
 }
@@ -962,7 +962,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
   transform: v-bind(animationObserverTransform);
   transform-origin: top left;
   width: 100vw;
-  height: 100vh;
+  height: var(--app-viewport-height);
   z-index: 102;
   pointer-events: none;
   // transition: transform 0.08s;
@@ -970,10 +970,10 @@ const getElementOpacity = (element: HTMLElement | null): number => {
   .detail-container {
     position: absolute;
     left: 50%;
-    top: calc(50% + 2vh);
+    top: 52%;
     transform: translate(-50%, -50%);
     width: 100vw;
-    height: calc(96vh);
+    height: 96%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -988,7 +988,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
 
     &.hide {
       display: none;
-      top: calc(152vh);
+      top: 152%;
       pointer-events: none;
     }
 
@@ -1000,18 +1000,18 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     &.m-2 {
       top: 50%;
       width: 700px;
-      height: min(800px, calc(100vh - 100px));
+      height: min(800px, calc(var(--app-viewport-height) - 100px));
       border-radius: 20px;
     }
 
     .detail-nuxt-page {
       width: 100vw;
-      height: 96vh;
+      height: 100%;
     }
 
     &.m-2 .detail-nuxt-page {
       width: 700px;
-      height: min(800px, calc(100vh - 100px));
+      height: 100%;
     }
   }
 

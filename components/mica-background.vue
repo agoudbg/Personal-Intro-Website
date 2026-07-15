@@ -227,7 +227,7 @@ watch(micaRefreshToken, () => {
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: var(--app-viewport-height);
     display: block;
     max-width: none;
     opacity: v-bind('props.opacity');

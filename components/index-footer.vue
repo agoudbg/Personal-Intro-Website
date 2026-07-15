@@ -13,7 +13,7 @@ import { cardSize } from '#imports';
 <style lang="scss" scoped>
 .footer {
   width: 100%;
-  min-height: max(200px, calc((100vh - (v-bind(cardSize) * 0.75)) / 2));
+  min-height: max(200px, calc((var(--app-viewport-height) - (v-bind(cardSize) * 0.75)) / 2));
   display: flex;
   justify-content: center;
   align-items: center;
