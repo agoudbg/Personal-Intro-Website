@@ -22,11 +22,13 @@
     "eslint": "^9.0.0",
     "nuxt": "^3.16.2",
     "scroll-slides": "^0.3.0",
+    "three": "^0.185.1",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@iconify-json/material-symbols": "^1.2.20",
+    "@types/three": "^0.185.1",
     "sass-embedded": "^1.86.2"
   }
 }

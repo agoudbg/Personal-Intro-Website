@@ -10,16 +10,17 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false,
 });
 
-const { pageId } = toRefs(props);
-
-const link = computed(() => {
-  return `/${pageId.value}`;
-});
+const link = computed(() => `/${props.pageId}`);
 
 </script>
 
 <template>
-  <NuxtLink class="card" :to="link" :aria-busy="props.loading || undefined">
+  <NuxtLink
+    class="card"
+    :to="link"
+    :data-preview-card-id="pageId"
+    :aria-busy="props.loading || undefined"
+  >
     <MicaBackground />
     <div class="card-content">
       <div class="title">

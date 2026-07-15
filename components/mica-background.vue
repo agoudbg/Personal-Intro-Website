@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { blurred, isSafari as isSafariRef } from '#imports';
+import {
+  blurred,
+  isMicaTrackingPaused,
+  isSafari as isSafariRef,
+  micaRefreshToken,
+} from '#imports';
 
 interface Props {
   opacity?: number;
@@ -72,18 +77,40 @@ const updatePosition = () => {
   image.style.transform = `matrix(${inverseScaleX}, 0, 0, ${inverseScaleY}, ${left}, ${top})`;
 };
 
+const stopPositionTracking = () => {
+  if (animationFrameId !== undefined) {
+    window.cancelAnimationFrame(animationFrameId);
+    animationFrameId = undefined;
+  }
+  if (scrollAnimationFrameId !== undefined) {
+    window.cancelAnimationFrame(scrollAnimationFrameId);
+    scrollAnimationFrameId = undefined;
+  }
+  scrollUpdateQueued = false;
+};
+
 const trackPosition = () => {
+  animationFrameId = undefined;
+  if (!isMounted || isMicaTrackingPaused.value) return;
+
+  updatePosition();
+  animationFrameId = window.requestAnimationFrame(trackPosition);
+};
+
+const startPositionTracking = () => {
+  if (!isMounted || isSafari.value || isMicaTrackingPaused.value || animationFrameId !== undefined) return;
+
   updatePosition();
   animationFrameId = window.requestAnimationFrame(trackPosition);
 };
 
 const handleViewportResize = () => {
   lastGeometry = '';
-  updatePosition();
+  if (!isMicaTrackingPaused.value) updatePosition();
 };
 
 const handleScroll = () => {
-  if (scrollUpdateQueued) return;
+  if (isMicaTrackingPaused.value || scrollUpdateQueued) return;
   scrollUpdateQueued = true;
 
   // ScrollSlide schedules its transform from the same scroll event. Deferring
@@ -120,18 +147,13 @@ onMounted(() => {
     parent = parent.parentElement;
   }
 
-  animationFrameId = window.requestAnimationFrame(trackPosition);
+  startPositionTracking();
 });
 
 onBeforeUnmount(() => {
   isMounted = false;
 
-  if (animationFrameId !== undefined) {
-    window.cancelAnimationFrame(animationFrameId);
-  }
-  if (scrollAnimationFrameId !== undefined) {
-    window.cancelAnimationFrame(scrollAnimationFrameId);
-  }
+  stopPositionTracking();
 
   resizeObserver?.disconnect();
   window.removeEventListener('resize', handleViewportResize);
@@ -152,7 +174,22 @@ const imgSrc = shallowRef(blurred.value.src);
 watch(blurredUpdateDate, () => {
   imgSrc.value = blurred.value.src;
   lastGeometry = '';
-  updatePosition();
+  if (!isMicaTrackingPaused.value) updatePosition();
+});
+
+watch(isMicaTrackingPaused, (paused) => {
+  if (paused) {
+    stopPositionTracking();
+    return;
+  }
+
+  lastGeometry = '';
+  startPositionTracking();
+});
+
+watch(micaRefreshToken, () => {
+  lastGeometry = '';
+  if (!isMicaTrackingPaused.value) updatePosition();
 });
 
 </script>

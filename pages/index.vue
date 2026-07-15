@@ -10,6 +10,12 @@ import {
   type RouteLocationNormalizedGeneric,
   type RouteLocationNormalizedLoadedGeneric,
 } from 'vue-router';
+import {
+  getCardShaderTransition,
+  useCardShaderTransition,
+  type CardShaderTransitionOverlayErrorEvent,
+  type CardShaderTransitionOverlayEvent,
+} from '~/composables/use-card-shader-transition';
 import Friends from '~/components/preview/friends.vue';
 import Blog from '~/components/preview/blog.vue';
 import Programs from '~/components/preview/programs.vue';
@@ -118,11 +124,15 @@ const cleanupActiveCardAnimation = () => {
   cleanup?.();
 };
 
+const clearAnimationCard = () => {
+  animationCard.value = undefined;
+};
+
 const resetAnimationArtifacts = () => {
   cardAnimationSetupId += 1;
   cleanupActiveCardAnimation();
   animationCardOwnerSetupId = undefined;
-  animationCard.value = undefined;
+  clearAnimationCard();
   isDetailAnimationPreparing.value = false;
   stopCardLoadingIndicator();
   animationObserverTransform.value = 'translate(0px, 0px) scale(1)';
@@ -130,9 +140,9 @@ const resetAnimationArtifacts = () => {
 };
 
 // rAF-based throttle helper to avoid scroll/resize thrash
-const throttleRAF = (fn: (...args: any[]) => void) => {
+const throttleRAF = <Args extends unknown[]>(fn: (...args: Args) => void) => {
   let scheduled = false;
-  return (...args: any[]) => {
+  return (...args: Args) => {
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(() => {
@@ -184,19 +194,93 @@ onMounted(() => {
 
 // on nuxt router change
 const router = useRouter();
+const {
+  phase: shaderTransitionPhase,
+  handleBeforeNavigation: handleShaderBeforeNavigation,
+  handleAfterNavigation: handleShaderAfterNavigation,
+  handleOverlayPrepared,
+  handleOverlayError,
+  cancel: cancelShaderTransition,
+} = useCardShaderTransition();
 
-router.beforeEach(async (to, from) => {
+const handleShaderTransitionPrepared = (event: CardShaderTransitionOverlayEvent) => {
+  handleOverlayPrepared(event);
+
+  if (event.direction === 'open' && shaderTransitionPhase.value === 'opening-running') {
+    stopCardLoadingIndicator();
+    isDetailAnimationPreparing.value = false;
+  }
+};
+
+const handleShaderTransitionError = (event: CardShaderTransitionOverlayErrorEvent) => {
+  handleOverlayError(event);
+  console.warn('Shader card transition failed; falling back to the legacy transition.', {
+    direction: event.direction,
+    error: event.error,
+  });
+};
+
+const removeBeforeGuard = router.beforeEach(async (to, from) => {
   console.log('#routers');
+
+  const shaderTransition = getCardShaderTransition(to, from);
+  if (shaderTransition) {
+    resetAnimationArtifacts();
+    if (shaderTransition.direction === 'open') {
+      startCardLoadingIndicator(shaderTransition.pageId);
+      const preparationId = cardAnimationSetupId;
+      const isCardDataReady = await waitForCardDataReady(to.name, preparationId);
+      if (preparationId !== cardAnimationSetupId) return;
+      if (!isCardDataReady) {
+        console.warn('Shader card transition skipped because its data is still refreshing.', {
+          pageId: shaderTransition.pageId,
+        });
+        await routerChange('b', to, from);
+        return;
+      }
+    }
+
+    const result = await handleShaderBeforeNavigation(to, from);
+    if (result.handled) {
+      if (shaderTransition.direction === 'open') isDetailAnimationPreparing.value = true;
+      return;
+    }
+
+    console.warn('Shader card transition preparation failed; using the legacy transition.', result.failure);
+  } else if (shaderTransitionPhase.value !== 'idle') {
+    cancelShaderTransition();
+    resetAnimationArtifacts();
+  }
+
   await routerChange('b', to, from);
 });
 
-router.afterEach(async (to, from, failure) => {
+const removeAfterGuard = router.afterEach(async (to, from, failure) => {
   if (failure) {
     // A newer navigation owns the shared animation state after cancelling this one.
-    if (!isNavigationFailure(failure, NavigationFailureType.cancelled)) resetAnimationArtifacts();
+    if (!isNavigationFailure(failure, NavigationFailureType.cancelled)) {
+      cancelShaderTransition();
+      resetAnimationArtifacts();
+    }
     return;
   }
+
+  const shaderTransition = getCardShaderTransition(to, from);
+  if (shaderTransition) {
+    const result = await handleShaderAfterNavigation(to, from);
+    if (result.handled) return;
+
+    cancelShaderTransition();
+    console.warn('Shader card transition start failed; using the legacy transition.', result.failure);
+  }
+
   await routerChange('a', to, from);
+});
+
+onBeforeUnmount(() => {
+  removeBeforeGuard();
+  removeAfterGuard();
+  cancelShaderTransition();
 });
 
 const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGeneric, from: RouteLocationNormalizedLoadedGeneric) {
@@ -314,12 +398,13 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
     if (setupId !== cardAnimationSetupId) {
       if (animationCardOwnerSetupId === setupId) {
         animationCardOwnerSetupId = undefined;
-        animationCard.value = undefined;
+        clearAnimationCard();
       }
       return;
     }
 
-    if (animationCard.value) {
+    const mountedAnimationCard = animationCard.value;
+    if (mountedAnimationCard) {
       const animationCardElement: HTMLElement | null = document.body.querySelector('.animation-card-container .card');
       console.log(animationCardElement, detailContainer, originalPreviewCard);
 
@@ -416,11 +501,11 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
       const detailContainerMiddle = {
         opacity: 0,
-      }
+      };
 
       const detailContainerMiddle2 = {
         opacity: 1,
-      }
+      };
 
       // detail container to: the same as detail container
       const detailContainerTo = {
@@ -441,7 +526,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       };
 
       const detailContainerContentTo = {
-        transform: `scale(1)`,
+        transform: 'scale(1)',
       };
 
       // sort animation from/to
@@ -480,52 +565,52 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       styleElement.innerHTML = `
       @keyframes animationCard {
         ${animationCardAnimation.map((item) => {
-        return `${Number(item[0]) * 100}% { 
+    return `${Number(item[0]) * 100}% {
             ${Object.entries(item[1]).map(([key, value]) => {
-          return `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`;
-        }).join(' ')}
+    return `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`;
+  }).join(' ')}
           }`;
-      }).join('')}
+  }).join('')}
       }
 
       @keyframes animationCardContent {
         ${animationCardContentAnimation.map((item) => {
-        return `${Number(item[0]) * 100}% { 
+    return `${Number(item[0]) * 100}% {
             ${Object.entries(item[1]).map(([key, value]) => {
-          return `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`;
-        }).join(' ')}
+    return `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`;
+  }).join(' ')}
           }`;
-      }).join('')}
+  }).join('')}
       }
 
       @keyframes originalPreviewCard {
         ${originalPreviewCardAnimation.map((item) => {
-        return `${Number(item[0]) * 100}% { 
+    return `${Number(item[0]) * 100}% {
             ${Object.entries(item[1]).map(([key, value]) => {
-          return `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`;
-        }).join(' ')}
+    return `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`;
+  }).join(' ')}
           }`;
-      }).join('')}
+  }).join('')}
       }
 
       @keyframes detailContainer {
         ${detailContainerAnimation.map((item) => {
-        return `${Number(item[0]) * 100}% { 
+    return `${Number(item[0]) * 100}% {
             ${Object.entries(item[1]).map(([key, value]) => {
-          return `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`;
-        }).join(' ')}
+    return `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`;
+  }).join(' ')}
           }`;
-      }).join('')}
+  }).join('')}
       }
 
       @keyframes detailContainerContent {
         ${detailContainerContentAnimation.map((item) => {
-        return `${Number(item[0]) * 100}% { 
+    return `${Number(item[0]) * 100}% {
             ${Object.entries(item[1]).map(([key, value]) => {
-          return `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`;
-        }).join(' ')}
+    return `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};`;
+  }).join(' ')}
           }`;
-      }).join('')}
+  }).join('')}
       }
 
       .animation-card-container .card {
@@ -559,7 +644,6 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
       if (!isClose) isDetailAnimationPreparing.value = false;
 
       let animationObserverRafId: number | undefined;
-      let cleanupTimerId: number | undefined;
       let hasCleanedUp = false;
 
       const cleanupAnimation = () => {
@@ -567,13 +651,13 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         hasCleanedUp = true;
 
         if (animationObserverRafId !== undefined) cancelAnimationFrame(animationObserverRafId);
-        if (cleanupTimerId !== undefined) window.clearTimeout(cleanupTimerId);
+        window.clearTimeout(cleanupTimerId);
         if (styleElement.isConnected) styleElement.remove();
 
         if (activeCardAnimationCleanup === cleanupAnimation) activeCardAnimationCleanup = undefined;
         if (animationCardOwnerSetupId === setupId) {
           animationCardOwnerSetupId = undefined;
-          animationCard.value = undefined;
+          clearAnimationCard();
           animationObserverTransform.value = 'translate(0px, 0px) scale(1)';
           currentCardAnimationEndAt.value = 0;
         }
@@ -608,7 +692,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         animationObserverRafId = requestAnimationFrame(updateAnimationObserverTransform);
       }
 
-      cleanupTimerId = window.setTimeout(cleanupAnimation, animationTime + 5);
+      const cleanupTimerId = window.setTimeout(cleanupAnimation, animationTime + 5);
     }
   });
 
@@ -616,7 +700,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
   // if is before router change, wait
   if (e === 'b') {
-    await new Promise((resolve => setTimeout(resolve, animationHalfTime + 10)));
+    await new Promise((resolve) => setTimeout(resolve, animationHalfTime + 10));
   }
 };
 
@@ -733,6 +817,11 @@ const getElementOpacity = (element: HTMLElement | null): number => {
         <Component :is="animationCard" />
       </div>
     </div>
+    <LazyCardTransitionOverlay
+      ref="card-shader-transition-overlay"
+      @prepared="handleShaderTransitionPrepared"
+      @error="handleShaderTransitionError"
+    />
   </div>
 </template>
 
