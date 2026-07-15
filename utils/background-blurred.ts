@@ -5,6 +5,7 @@ export const MICA_TEXTURE_BLEED_PX = 128;
 
 export const blurred = shallowRef(new Image());
 export const blurredUpdateDate = shallowRef(0);
+export const blurredRenderStatus = shallowRef<'loading' | 'ready' | 'error'>('loading');
 
 const BACKGROUND_BLUR_PX = 30;
 const FILTER_PADDING_PX = BACKGROUND_BLUR_PX * 2;
@@ -16,6 +17,7 @@ let renderSequence = 0;
 
 async function updateBlurredImage() {
   const currentRender = ++renderSequence;
+  blurredRenderStatus.value = 'loading';
 
   try {
     const viewportWidth = window.innerWidth;
@@ -122,7 +124,11 @@ async function updateBlurredImage() {
 
     blurred.value.src = canvas.toDataURL();
     blurredUpdateDate.value = Date.now();
+    blurredRenderStatus.value = 'ready';
   } catch (error: unknown) {
+    if (currentRender !== renderSequence) return;
+
+    blurredRenderStatus.value = 'error';
     console.error('Failed to render the blurred theme background.', {
       backgroundImage: backgroundImage.value,
       error,

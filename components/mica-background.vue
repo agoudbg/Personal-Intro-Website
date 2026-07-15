@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {
   blurred,
+  blurredRenderStatus,
   isMicaTrackingPaused,
   isSafari as isSafariRef,
   micaRefreshToken,
@@ -19,9 +20,12 @@ const props = withDefaults(defineProps<Props>(), {
 const micaElement = useTemplateRef<HTMLElement>('mica');
 const backgroundImageElement = useTemplateRef<HTMLImageElement>('background-image');
 
-const isSafari = computed(() => {
-  return isSafariRef.value /* && !props.forceMicaMode */;
-});
+const hasBackgroundImageError = shallowRef(false);
+const canUseSafariFallback = computed(() => isSafariRef.value && !props.forceMicaMode);
+const isSafariFallback = computed(() => (
+  canUseSafariFallback.value
+  && (blurredRenderStatus.value === 'error' || hasBackgroundImageError.value)
+));
 
 const MIN_VISIBLE_SCALE = 0.01;
 
@@ -34,7 +38,7 @@ let scrollUpdateQueued = false;
 const scrollParents: HTMLElement[] = [];
 
 const updatePosition = () => {
-  if (isSafari.value) return;
+  if (isSafariFallback.value) return;
 
   const element = micaElement.value;
   const image = backgroundImageElement.value;
@@ -98,7 +102,12 @@ const trackPosition = () => {
 };
 
 const startPositionTracking = () => {
-  if (!isMounted || isSafari.value || isMicaTrackingPaused.value || animationFrameId !== undefined) return;
+  if (
+    !isMounted
+    || isSafariFallback.value
+    || isMicaTrackingPaused.value
+    || animationFrameId !== undefined
+  ) return;
 
   updatePosition();
   animationFrameId = window.requestAnimationFrame(trackPosition);
@@ -130,8 +139,6 @@ const handleScroll = () => {
 };
 
 onMounted(() => {
-  if (isSafari.value) return;
-
   const element = micaElement.value;
   if (!element) return;
 
@@ -163,18 +170,38 @@ onBeforeUnmount(() => {
   scrollParents.length = 0;
 });
 
-// Safari uses the active theme's surface color behind the backdrop filter.
-const safariBackgroundOpacity = computed(() => {
-  if (!isSafari.value) return 0;
+// The Safari fallback uses the active theme's surface color behind the backdrop filter.
+const safariFallbackBackgroundOpacity = computed(() => {
+  if (!isSafariFallback.value) return 0;
   return Math.min(1, Math.max(0, 1 - props.opacity));
 });
 
 const imgSrc = shallowRef(blurred.value.src);
 
+const handleBackgroundImageError = () => {
+  console.error('Failed to load the rendered Mica background image.', {
+    safariFallbackAvailable: canUseSafariFallback.value,
+  });
+
+  if (canUseSafariFallback.value) hasBackgroundImageError.value = true;
+};
+
 watch(blurredUpdateDate, () => {
+  hasBackgroundImageError.value = false;
   imgSrc.value = blurred.value.src;
   lastGeometry = '';
   if (!isMicaTrackingPaused.value) updatePosition();
+});
+
+watch(isSafariFallback, async (useFallback) => {
+  if (useFallback) {
+    stopPositionTracking();
+    return;
+  }
+
+  lastGeometry = '';
+  await nextTick();
+  startPositionTracking();
 });
 
 watch(isMicaTrackingPaused, (paused) => {
@@ -195,15 +222,16 @@ watch(micaRefreshToken, () => {
 </script>
 
 <template>
-  <div ref="mica" class="mica-background" :class="{ safari: isSafari }">
+  <div ref="mica" class="mica-background" :class="{ 'safari-fallback': isSafariFallback }">
     <img
-      v-if="!isSafari"
+      v-if="!isSafariFallback && imgSrc"
       ref="background-image"
       class="background-image"
       :src="imgSrc"
       alt=""
       aria-hidden="true"
       @load="handleViewportResize"
+      @error="handleBackgroundImageError"
     >
   </div>
 </template>
@@ -216,8 +244,8 @@ watch(micaRefreshToken, () => {
   background-color: var(--color-surface-mica);
   z-index: 0;
 
-  &.safari {
-    background-color: rgb(var(--color-surface-mica-rgb) / v-bind(safariBackgroundOpacity));
+  &.safari-fallback {
+    background-color: rgb(var(--color-surface-mica-rgb) / v-bind(safariFallbackBackgroundOpacity));
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
   }
