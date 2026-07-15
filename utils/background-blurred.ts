@@ -1,4 +1,9 @@
 import { createCanvas, loadImage } from 'canvas';
+import type {
+  Canvas,
+  CanvasRenderingContext2D as NodeCanvasRenderingContext2D,
+  Image as CanvasImage,
+} from 'canvas';
 import { shallowRef, watch } from 'vue';
 
 export const MICA_TEXTURE_BLEED_PX = 128;
@@ -10,10 +15,56 @@ export const blurredRenderStatus = shallowRef<'loading' | 'ready' | 'error'>('lo
 const BACKGROUND_BLUR_PX = 30;
 const FILTER_PADDING_PX = BACKGROUND_BLUR_PX * 2;
 const BLUR_PASSES = 5;
+const POLYFILL_RENDER_SCALE = 0.25;
 
 type CanvasRectangle = [x: number, y: number, width: number, height: number];
+type CanvasFilterMode = 'native' | 'polyfill';
+type DrawImageCoordinates =
+  | [dx: number, dy: number]
+  | [
+    sx: number,
+    sy: number,
+    sw: number,
+    sh: number,
+    dx: number,
+    dy: number,
+    dw: number,
+    dh: number,
+  ];
 
 let renderSequence = 0;
+let canvasFilterPolyfillPromise: Promise<CanvasFilterMode> | undefined;
+const nativeDrawImage = CanvasRenderingContext2D.prototype.drawImage;
+
+function drawImageWithoutFilter(
+  context: NodeCanvasRenderingContext2D,
+  image: Canvas | CanvasImage,
+  ...coordinates: DrawImageCoordinates
+) {
+  Reflect.apply(nativeDrawImage, context, [image, ...coordinates]);
+}
+
+function hasNativeCanvasFilter() {
+  return 'filter' in CanvasRenderingContext2D.prototype;
+}
+
+async function ensureCanvasFilterSupport(): Promise<CanvasFilterMode> {
+  if (canvasFilterPolyfillPromise) return canvasFilterPolyfillPromise;
+  if (hasNativeCanvasFilter()) return 'native';
+
+  canvasFilterPolyfillPromise = import('context-filter-polyfill')
+    .then(async () => {
+      // The package installs its proxy in a queued microtask.
+      await Promise.resolve();
+      return 'polyfill' as const;
+    })
+    .catch((error: unknown) => {
+      canvasFilterPolyfillPromise = undefined;
+      throw new Error('Failed to initialize the canvas filter polyfill.', { cause: error });
+    });
+
+  return canvasFilterPolyfillPromise;
+}
 
 async function updateBlurredImage() {
   const currentRender = ++renderSequence;
@@ -43,7 +94,8 @@ async function updateBlurredImage() {
     const viewportCanvas = createCanvas(viewportWidth, viewportHeight);
     const viewportContext = viewportCanvas.getContext('2d');
 
-    viewportContext.drawImage(
+    drawImageWithoutFilter(
+      viewportContext,
       image,
       0,
       0,
@@ -63,10 +115,10 @@ async function updateBlurredImage() {
     const sourceCanvas = createCanvas(workingWidth, workingHeight);
     const sourceContext = sourceCanvas.getContext('2d');
 
-    sourceContext.drawImage(viewportCanvas, workingBleed, workingBleed);
+    drawImageWithoutFilter(sourceContext, viewportCanvas, workingBleed, workingBleed);
 
     const drawViewportRegion = (source: CanvasRectangle, destination: CanvasRectangle) => {
-      sourceContext.drawImage(viewportCanvas, ...source, ...destination);
+      drawImageWithoutFilter(sourceContext, viewportCanvas, ...source, ...destination);
     };
 
     drawViewportRegion(
@@ -105,21 +157,45 @@ async function updateBlurredImage() {
       ],
     );
 
-    const textureWidth = viewportWidth + MICA_TEXTURE_BLEED_PX * 2;
-    const textureHeight = viewportHeight + MICA_TEXTURE_BLEED_PX * 2;
+    const canvasFilterMode = await ensureCanvasFilterSupport();
+
+    if (currentRender !== renderSequence) return;
+
+    const renderScale = canvasFilterMode === 'polyfill' ? POLYFILL_RENDER_SCALE : 1;
+    const fullTextureWidth = viewportWidth + MICA_TEXTURE_BLEED_PX * 2;
+    const fullTextureHeight = viewportHeight + MICA_TEXTURE_BLEED_PX * 2;
+    const textureWidth = Math.ceil(fullTextureWidth * renderScale);
+    const textureHeight = Math.ceil(fullTextureHeight * renderScale);
     const canvas = createCanvas(textureWidth, textureHeight);
     const context = canvas.getContext('2d');
+    const blurRadius = Math.max(1, Math.round(BACKGROUND_BLUR_PX * renderScale));
 
     // node-canvas supports the filter property even though its public type omits it.
-    (context as unknown as { filter: string }).filter = `blur(${BACKGROUND_BLUR_PX}px)`;
+    (context as unknown as { filter: string }).filter = `blur(${blurRadius}px)`;
 
-    // Extra filter padding keeps the final texture's outer bleed fully opaque.
-    for (let pass = 0; pass < BLUR_PASSES; pass += 1) {
+    if (canvasFilterMode === 'polyfill') {
+      // The polyfill runs a CPU blur for every pixel and drawing call. A reduced
+      // texture remains smooth at this radius while avoiding a long main-thread stall.
       context.drawImage(
         sourceCanvas,
-        -FILTER_PADDING_PX,
-        -FILTER_PADDING_PX,
+        FILTER_PADDING_PX,
+        FILTER_PADDING_PX,
+        fullTextureWidth,
+        fullTextureHeight,
+        0,
+        0,
+        textureWidth,
+        textureHeight,
       );
+    } else {
+      // Extra filter padding keeps the final texture's outer bleed fully opaque.
+      for (let pass = 0; pass < BLUR_PASSES; pass += 1) {
+        context.drawImage(
+          sourceCanvas,
+          -FILTER_PADDING_PX,
+          -FILTER_PADDING_PX,
+        );
+      }
     }
 
     blurred.value.src = canvas.toDataURL();

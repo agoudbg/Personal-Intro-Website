@@ -18,6 +18,7 @@
     "@nuxt/scripts": "0.11.5",
     "@unhead/vue": "^2.0.0-rc.8",
     "canvas": "^3.1.0",
+    "context-filter-polyfill": "0.3.23",
     "dark-icon-generator": "^1.1.0",
     "eslint": "^9.0.0",
     "nuxt": "^3.16.2",

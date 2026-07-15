@@ -10,6 +10,12 @@ export interface CardTransitionTextureBleed {
   y: number;
 }
 
+interface CardTransitionTextureLayout {
+  width: number;
+  height: number;
+  bleed: CardTransitionTextureBleed;
+}
+
 export interface CardTransitionCornerRadius {
   x: number;
   y: number;
@@ -645,7 +651,7 @@ export class CardTransitionMicaRenderer {
 
     const initialViewportWidth = options.viewport.width;
     const initialViewportHeight = options.viewport.height;
-    const textureBleed = this.resolveTextureBleed(
+    const textureLayout = this.resolveTextureLayout(
       image.naturalWidth,
       image.naturalHeight,
       initialViewportWidth,
@@ -654,14 +660,16 @@ export class CardTransitionMicaRenderer {
 
     this.uniforms = {
       uTexture: { value: this.texture },
-      uTextureSize: { value: new THREE.Vector2(image.naturalWidth, image.naturalHeight) },
+      uTextureSize: { value: new THREE.Vector2(textureLayout.width, textureLayout.height) },
       uTextureViewportSize: {
         value: new THREE.Vector2(
-          Math.max(1, image.naturalWidth - textureBleed.x * 2),
-          Math.max(1, image.naturalHeight - textureBleed.y * 2),
+          Math.max(1, textureLayout.width - textureLayout.bleed.x * 2),
+          Math.max(1, textureLayout.height - textureLayout.bleed.y * 2),
         ),
       },
-      uTextureBleed: { value: new THREE.Vector2(textureBleed.x, textureBleed.y) },
+      uTextureBleed: {
+        value: new THREE.Vector2(textureLayout.bleed.x, textureLayout.bleed.y),
+      },
       uViewportSize: { value: new THREE.Vector2() },
       uDrawingBufferSize: { value: new THREE.Vector2() },
       uSourceRect: { value: rectToVector(options.sourceRect) },
@@ -842,7 +850,7 @@ export class CardTransitionMicaRenderer {
     const nextTexture = createTexture(image);
     const previousTexture = this.texture;
     const viewportSize = this.uniforms.uViewportSize.value;
-    const textureBleed = this.resolveTextureBleed(
+    const textureLayout = this.resolveTextureLayout(
       image.naturalWidth,
       image.naturalHeight,
       viewportSize.x,
@@ -851,11 +859,11 @@ export class CardTransitionMicaRenderer {
 
     this.texture = nextTexture;
     this.uniforms.uTexture.value = nextTexture;
-    this.uniforms.uTextureSize.value.set(image.naturalWidth, image.naturalHeight);
-    this.uniforms.uTextureBleed.value.set(textureBleed.x, textureBleed.y);
+    this.uniforms.uTextureSize.value.set(textureLayout.width, textureLayout.height);
+    this.uniforms.uTextureBleed.value.set(textureLayout.bleed.x, textureLayout.bleed.y);
     this.uniforms.uTextureViewportSize.value.set(
-      Math.max(1, image.naturalWidth - textureBleed.x * 2),
-      Math.max(1, image.naturalHeight - textureBleed.y * 2),
+      Math.max(1, textureLayout.width - textureLayout.bleed.x * 2),
+      Math.max(1, textureLayout.height - textureLayout.bleed.y * 2),
     );
     previousTexture.dispose();
     this.render();
@@ -1009,6 +1017,30 @@ export class CardTransitionMicaRenderer {
     return {
       x: Math.max(0, (textureWidth - viewportWidth) * 0.5),
       y: Math.max(0, (textureHeight - viewportHeight) * 0.5),
+    };
+  }
+
+  private resolveTextureLayout(
+    textureWidth: number,
+    textureHeight: number,
+    viewportWidth: number,
+    viewportHeight: number,
+  ): CardTransitionTextureLayout {
+    const bleed = this.resolveTextureBleed(
+      textureWidth,
+      textureHeight,
+      viewportWidth,
+      viewportHeight,
+    );
+
+    if (!this.explicitTextureBleed) {
+      return { width: textureWidth, height: textureHeight, bleed };
+    }
+
+    return {
+      width: viewportWidth + bleed.x * 2,
+      height: viewportHeight + bleed.y * 2,
+      bleed,
     };
   }
 
