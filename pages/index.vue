@@ -1021,4 +1021,10 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     }
   }
 }
+
+@media (hover: none) and (pointer: coarse) {
+  .index .slide :deep(.slider-item .slider-slot) {
+    transition: none;
+  }
+}
 </style>

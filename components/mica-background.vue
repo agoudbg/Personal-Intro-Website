@@ -5,6 +5,7 @@ import {
   isMicaTrackingPaused,
   isSafari as isSafariRef,
   micaRefreshToken,
+  registerMicaTracker,
 } from '#imports';
 
 interface Props {
@@ -29,13 +30,22 @@ const isSafariFallback = computed(() => (
 
 const MIN_VISIBLE_SCALE = 0.01;
 
-let animationFrameId: number | undefined;
-let scrollAnimationFrameId: number | undefined;
 let resizeObserver: ResizeObserver | undefined;
+let unregisterTracker: (() => void) | undefined;
 let lastGeometry = '';
+let localWidth = 0;
+let localHeight = 0;
+let textureWidth = 0;
+let textureHeight = 0;
 let isMounted = false;
-let scrollUpdateQueued = false;
-const scrollParents: HTMLElement[] = [];
+
+const updateLocalSize = () => {
+  const element = micaElement.value;
+  if (!element) return;
+
+  localWidth = element.offsetWidth;
+  localHeight = element.offsetHeight;
+};
 
 const updatePosition = () => {
   if (isSafariFallback.value) return;
@@ -46,10 +56,19 @@ const updatePosition = () => {
   if (!element || !image) return;
 
   const rect = element.getBoundingClientRect();
-  const localWidth = element.offsetWidth;
-  const localHeight = element.offsetHeight;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
 
   if (localWidth <= 0 || localHeight <= 0) return;
+
+  // Far-offscreen cards keep their last matrix. The texture bleed doubles as a
+  // prewarm margin so an approaching card refreshes before it becomes visible.
+  if (
+    rect.right <= -MICA_TEXTURE_BLEED_PX
+    || rect.bottom <= -MICA_TEXTURE_BLEED_PX
+    || rect.left >= viewportWidth + MICA_TEXTURE_BLEED_PX
+    || rect.top >= viewportHeight + MICA_TEXTURE_BLEED_PX
+  ) return;
 
   const scaleX = rect.width / localWidth;
   const scaleY = rect.height / localHeight;
@@ -67,8 +86,8 @@ const updatePosition = () => {
   const inverseScaleY = 1 / scaleY;
   const left = (-rect.left - MICA_TEXTURE_BLEED_PX) * inverseScaleX;
   const top = (-rect.top - MICA_TEXTURE_BLEED_PX) * inverseScaleY;
-  const width = window.innerWidth + MICA_TEXTURE_BLEED_PX * 2;
-  const height = window.innerHeight + MICA_TEXTURE_BLEED_PX * 2;
+  const width = viewportWidth + MICA_TEXTURE_BLEED_PX * 2;
+  const height = viewportHeight + MICA_TEXTURE_BLEED_PX * 2;
   const geometry = [left, top, inverseScaleX, inverseScaleY, width, height]
     .map((value) => value.toFixed(3))
     .join(':');
@@ -76,29 +95,13 @@ const updatePosition = () => {
   if (geometry === lastGeometry) return;
 
   lastGeometry = geometry;
-  image.style.width = `${width}px`;
-  image.style.height = `${height}px`;
+  if (width !== textureWidth || height !== textureHeight) {
+    textureWidth = width;
+    textureHeight = height;
+    image.style.width = `${width}px`;
+    image.style.height = `${height}px`;
+  }
   image.style.transform = `matrix(${inverseScaleX}, 0, 0, ${inverseScaleY}, ${left}, ${top})`;
-};
-
-const stopPositionTracking = () => {
-  if (animationFrameId !== undefined) {
-    window.cancelAnimationFrame(animationFrameId);
-    animationFrameId = undefined;
-  }
-  if (scrollAnimationFrameId !== undefined) {
-    window.cancelAnimationFrame(scrollAnimationFrameId);
-    scrollAnimationFrameId = undefined;
-  }
-  scrollUpdateQueued = false;
-};
-
-const trackPosition = () => {
-  animationFrameId = undefined;
-  if (!isMounted || isMicaTrackingPaused.value) return;
-
-  updatePosition();
-  animationFrameId = window.requestAnimationFrame(trackPosition);
 };
 
 const startPositionTracking = () => {
@@ -106,36 +109,20 @@ const startPositionTracking = () => {
     !isMounted
     || isSafariFallback.value
     || isMicaTrackingPaused.value
-    || animationFrameId !== undefined
+    || unregisterTracker
   ) return;
+  unregisterTracker = registerMicaTracker(updatePosition);
+};
 
-  updatePosition();
-  animationFrameId = window.requestAnimationFrame(trackPosition);
+const stopPositionTracking = () => {
+  unregisterTracker?.();
+  unregisterTracker = undefined;
 };
 
 const handleViewportResize = () => {
+  updateLocalSize();
   lastGeometry = '';
   if (!isMicaTrackingPaused.value) updatePosition();
-};
-
-const handleScroll = () => {
-  if (isMicaTrackingPaused.value || scrollUpdateQueued) return;
-  scrollUpdateQueued = true;
-
-  // ScrollSlide schedules its transform from the same scroll event. Deferring
-  // registration until the event finishes makes this rAF run after its update.
-  queueMicrotask(() => {
-    if (!isMounted) {
-      scrollUpdateQueued = false;
-      return;
-    }
-
-    scrollAnimationFrameId = window.requestAnimationFrame(() => {
-      scrollAnimationFrameId = undefined;
-      scrollUpdateQueued = false;
-      updatePosition();
-    });
-  });
 };
 
 onMounted(() => {
@@ -143,16 +130,10 @@ onMounted(() => {
   if (!element) return;
 
   isMounted = true;
+  updateLocalSize();
   resizeObserver = new ResizeObserver(handleViewportResize);
   resizeObserver.observe(element);
   window.addEventListener('resize', handleViewportResize);
-
-  let parent = element.parentElement;
-  while (parent) {
-    parent.addEventListener('scroll', handleScroll, { passive: true });
-    scrollParents.push(parent);
-    parent = parent.parentElement;
-  }
 
   startPositionTracking();
 });
@@ -164,10 +145,6 @@ onBeforeUnmount(() => {
 
   resizeObserver?.disconnect();
   window.removeEventListener('resize', handleViewportResize);
-  scrollParents.forEach((parent) => {
-    parent.removeEventListener('scroll', handleScroll);
-  });
-  scrollParents.length = 0;
 });
 
 // The Safari fallback uses the active theme's surface color behind the backdrop filter.
@@ -242,6 +219,8 @@ watch(micaRefreshToken, () => {
   width: 100%;
   height: 100%;
   background-color: var(--color-surface-mica);
+  backface-visibility: hidden;
+  contain: paint;
   z-index: 0;
 
   &.safari-fallback {
@@ -260,6 +239,7 @@ watch(micaRefreshToken, () => {
     max-width: none;
     opacity: v-bind('props.opacity');
     pointer-events: none;
+    backface-visibility: hidden;
     transform-origin: top left;
     will-change: transform;
     z-index: 0;
