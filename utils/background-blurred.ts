@@ -15,7 +15,7 @@ export const blurredRenderStatus = shallowRef<'loading' | 'ready' | 'error'>('lo
 const BACKGROUND_BLUR_PX = 30;
 const FILTER_PADDING_PX = BACKGROUND_BLUR_PX * 2;
 const BLUR_PASSES = 5;
-const POLYFILL_RENDER_SCALE = 0.25;
+const MICA_TEXTURE_RENDER_SCALE = 0.25;
 
 type CanvasRectangle = [x: number, y: number, width: number, height: number];
 type CanvasFilterMode = 'native' | 'polyfill';
@@ -161,7 +161,7 @@ async function updateBlurredImage() {
 
     if (currentRender !== renderSequence) return;
 
-    const renderScale = canvasFilterMode === 'polyfill' ? POLYFILL_RENDER_SCALE : 1;
+    const renderScale = MICA_TEXTURE_RENDER_SCALE;
     const fullTextureWidth = viewportWidth + MICA_TEXTURE_BLEED_PX * 2;
     const fullTextureHeight = viewportHeight + MICA_TEXTURE_BLEED_PX * 2;
     const textureWidth = Math.ceil(fullTextureWidth * renderScale);
@@ -189,11 +189,16 @@ async function updateBlurredImage() {
       );
     } else {
       // Extra filter padding keeps the final texture's outer bleed fully opaque.
+      const scaledFilterPadding = FILTER_PADDING_PX * renderScale;
+      const scaledSourceWidth = sourceCanvas.width * renderScale;
+      const scaledSourceHeight = sourceCanvas.height * renderScale;
       for (let pass = 0; pass < BLUR_PASSES; pass += 1) {
         context.drawImage(
           sourceCanvas,
-          -FILTER_PADDING_PX,
-          -FILTER_PADDING_PX,
+          -scaledFilterPadding,
+          -scaledFilterPadding,
+          scaledSourceWidth,
+          scaledSourceHeight,
         );
       }
     }
