@@ -249,7 +249,7 @@ const FRAGMENT_SHADER = /* glsl */ `
       halfSize
     );
     float edgeDistance = roundedRectangleDistance(localPoint, halfSize, radius);
-    float edgeWidth = max(fwidth(edgeDistance), 0.0001);
+    float edgeWidth = max(fwidth(edgeDistance) * 0.75, 0.0001);
     float shapeAlpha = 1.0 - smoothstep(-edgeWidth, edgeWidth, edgeDistance);
 
     vec2 viewportUv = gl_FragCoord.xy / uDrawingBufferSize;

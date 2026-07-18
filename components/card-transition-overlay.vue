@@ -472,7 +472,7 @@ const prepareRenderer = async (
       textureOpacity: 0.2,
       surfaceColor,
       surfaceOpacity: 1,
-      maxPixelRatio: 1.5,
+      maxPixelRatio: 1,
       antialias: false,
       autoResize: false,
       forceContextLossOnDispose: false,
