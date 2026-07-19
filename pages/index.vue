@@ -31,7 +31,8 @@ const { isRefreshing: isBlogArticlesRefreshing } = useBlogArticles();
 
 // Calculate Spacer Header
 const spacerHeaderScalePercent = ref(1);
-const spacerHeaderTopOffset = ref('0px');
+const spacerHeaderTop = ref('0px');
+const spacerHeaderScale = ref('1');
 const showSpacerHeader = ref(false);
 const showHeaderBackdrop = ref(false);
 
@@ -158,20 +159,29 @@ const throttleRAF = <Args extends unknown[]>(fn: (...args: Args) => void) => {
 const calculateSpacerHeader = () => {
   // Calculate the scroll percentage
   const scrollTop = document.querySelector('.slider-box .slide')?.scrollTop || 0;
-  const scrollPercentRaw = scrollTop / ((document.querySelector('.slider-box .spacer')?.scrollHeight || 1) - 10) * 2;
+  const spacerElement = document.querySelector('.slider-box .spacer');
+  const spacerHeight = spacerElement?.scrollHeight || 1;
+  const scrollPercentRaw = scrollTop / (spacerHeight - 10) * 2;
   const scrollPercent = Math.min(Math.max(scrollPercentRaw, 0), 1);
 
   showSpacerHeader.value = scrollPercent < 1;
   showHeaderBackdrop.value = (document.querySelector('.slide-item .card')?.getBoundingClientRect().top || 0) < 50;
 
   // Calculate the scale and offset based on the scroll percentage
-  const maxScalePercent = Math.min(2.14, (document.querySelector('.slider-box .spacer')?.scrollHeight || 1) / 70, (document.querySelector('.slider-box .spacer')?.clientWidth || 1) / 200);
+  const maxScalePercent = Math.min(2.14, spacerHeight / 70, (spacerElement?.clientWidth || 1) / 200);
   const minScalePercent = 1;
 
   spacerHeaderScalePercent.value = maxScalePercent - (scrollPercent * (maxScalePercent - minScalePercent));
-  spacerHeaderTopOffset.value = scrollPercentRaw > 1 ?
-    `-${(1 - scrollPercentRaw) * 50}px`
-    : `${(1 - scrollPercent) * Math.min(16, Number(cardSize.value.replace('px', '')) / 150)}px`;
+
+  // Drive the merged fixed header to reproduce the original in-flow
+  // spacer-header: its top edge sits at the spacer midpoint and scrolls with
+  // the container, scaled about its top-center origin. Derive it from the
+  // first card's live position so constant layout offsets cancel exactly.
+  const scale = spacerHeaderScalePercent.value;
+  const cardTop = document.querySelector('.slide-item .card')?.getBoundingClientRect().top ?? 0;
+  const cardMargin = Number.parseFloat(cardSize.value) / 20;
+  spacerHeaderTop.value = `${cardTop - spacerHeight / 2 - cardMargin + 20 - 20 * scale}px`;
+  spacerHeaderScale.value = `${scale}`;
 };
 
 onMounted(() => {
@@ -735,8 +745,8 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     <div
       :class="`index m-${slideMode} ${router.currentRoute.value.name !== 'index' && !isDetailAnimationPreparing ? 'hide' : ''}`">
       <div class="background-image" />
-      <div :class="`index-header-box ${showSpacerHeader ? '' : 'show'} ${slideMode}`">
-        <HeaderBlurBackground :class="`backdrop`" :show="showHeaderBackdrop" :opacity="1" />
+      <div :class="`index-header-box ${showSpacerHeader ? 'big' : 'show'} ${slideMode}`">
+        <HeaderBlurBackground :class="`backdrop`" :show="showHeaderBackdrop && !showSpacerHeader" :opacity="1" />
         <IndexHeader class="index-header" />
       </div>
       <div class="slider-box">
@@ -745,9 +755,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
           :direction="'vertical'" :item-count="slideMode === 2 ? 3 : slideMode === 1 ? 4 : 6"
           :scale-start-percent="0.8">
           <template #item-0>
-            <div :class="`spacer ${showSpacerHeader ? 'show' : ''}`">
-              <IndexHeader class="spacer-header" />
-            </div>
+            <div class="spacer" />
           </template>
 
           <template #item-1>
@@ -835,18 +843,17 @@ const getElementOpacity = (element: HTMLElement | null): number => {
 
 <style lang="scss" scoped>
 .index {
+  --background-transition-duration: 0.6s;
+
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: var(--app-viewport-height);
   overflow: hidden;
-  transition: border-radius 0.3s, transform 0.3s;
 
-  &.m-0.hide,
-  &.m-1.hide {
-    border-radius: 14px;
-    transform: scale(0.96);
+  &.hide {
+    --background-transition-duration: 1.5s;
   }
 
   .background-image {
@@ -859,7 +866,16 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     background-image: var(--index-background-image);
     background-size: cover;
     background-position: center;
+    transform-origin: center;
+    filter: blur(0px);
+    transition: border-radius var(--background-transition-duration) ease, transform var(--background-transition-duration) ease, filter var(--background-transition-duration) ease;
+    will-change: transform, filter;
     z-index: -1;
+  }
+
+  &.hide .background-image {
+    filter: blur(16px);
+    transform: scale(1.1);
   }
 
   .index-header-box {
@@ -873,9 +889,19 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     align-items: center;
     z-index: 10;
     opacity: 0;
+    transition: opacity 0.4s, visibility 0s;
 
     &.show {
       opacity: 1;
+    }
+
+    &.big {
+      opacity: 1;
+
+      .index-header {
+        transform: translateY(v-bind(spacerHeaderTop)) scale(v-bind(spacerHeaderScale));
+        transform-origin: top center;
+      }
     }
 
     .backdrop {
@@ -886,6 +912,13 @@ const getElementOpacity = (element: HTMLElement | null): number => {
       height: 100%;
       z-index: -1;
     }
+  }
+
+  &.hide .index-header-box {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.4s, visibility 0s 0.4s;
   }
 
   .slide {
@@ -944,17 +977,6 @@ const getElementOpacity = (element: HTMLElement | null): number => {
       position: relative;
       width: 100%;
       height: max(200px, calc(var(--app-viewport-height) - (v-bind(cardSize) * 1) - 40px));
-      opacity: 0;
-
-      &.show {
-        opacity: 1;
-      }
-
-      .spacer-header {
-        position: relative;
-        top: calc(50%);
-        transform: scale(v-bind(spacerHeaderScalePercent));
-      }
     }
 
     &.m-2 .spacer {
