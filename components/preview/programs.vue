@@ -25,7 +25,6 @@ const props = withDefaults(defineProps<{ loading?: boolean }>(), {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0 0 0.5rem 0;
 
   .programs-list {
     width: 100%;

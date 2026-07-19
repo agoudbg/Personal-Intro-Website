@@ -28,7 +28,6 @@ const friendsList = randomFriends.slice(0, 4);
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0 0 0.5rem 0;
 
   .friends-list {
     width: 100%;
@@ -40,7 +39,7 @@ const friendsList = randomFriends.slice(0, 4);
 
     .item {
       width: 100%;
-      padding-block: 0.53em;
+      padding-block: 0.58em;
     }
   }
 }
