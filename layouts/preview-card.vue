@@ -11,6 +11,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const link = computed(() => `/${props.pageId}`);
+const previewCardDesignSize = `${PREVIEW_CARD_DESIGN_SIZE}px`;
+const previewCardDesignOffset = `${PREVIEW_CARD_DESIGN_SIZE / -2}px`;
 
 </script>
 
@@ -32,10 +34,10 @@ const link = computed(() => `/${props.pageId}`);
       <div class="slot">
         <slot />
       </div>
-    </div>
-    <div v-if="props.loading" class="card-loading-indicator" role="status" aria-live="polite"
-      aria-label="正在加载详情">
-      <Icon class="card-loading-indicator-icon" name="material-symbols:progress-activity" aria-hidden="true" />
+      <div v-if="props.loading" class="card-loading-indicator" role="status" aria-live="polite"
+        aria-label="正在加载详情">
+        <Icon class="card-loading-indicator-icon" name="material-symbols:progress-activity" aria-hidden="true" />
+      </div>
     </div>
   </NuxtLink>
 </template>
@@ -44,7 +46,6 @@ const link = computed(() => `/${props.pageId}`);
 .card {
   width: v-bind(cardSize);
   height: v-bind(cardSize);
-  font-size: v-bind(cardRem);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -63,15 +64,20 @@ const link = computed(() => `/${props.pageId}`);
 
   .card-content {
     position: absolute;
-    width: v-bind(cardSize);
-    height: v-bind(cardSize);
-    font-size: v-bind(cardRem);
+    top: 0;
+    left: 50%;
+    width: v-bind(previewCardDesignSize);
+    height: v-bind(previewCardDesignSize);
+    margin-left: v-bind(previewCardDesignOffset);
+    font-size: 1rem;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
     padding: 10px;
     text-align: center;
+    transform: scale(v-bind(cardScale));
+    transform-origin: top center;
 
     .title {
       display: flex;
@@ -86,7 +92,6 @@ const link = computed(() => `/${props.pageId}`);
 
       .title-text {
         margin-left: 10px;
-        font-size: v-bind(cardRem);
       }
     }
 
@@ -99,11 +104,11 @@ const link = computed(() => `/${props.pageId}`);
 
   .card-loading-indicator {
     position: absolute;
-    top: clamp(12px, 1em, 16px);
-    right: clamp(12px, 1em, 16px);
+    top: 16px;
+    right: 16px;
     z-index: 2;
-    width: clamp(28px, 2em, 32px);
-    height: clamp(28px, 2em, 32px);
+    width: 32px;
+    height: 32px;
     display: grid;
     place-items: center;
     color: var(--color-accent);
@@ -114,7 +119,7 @@ const link = computed(() => `/${props.pageId}`);
     pointer-events: none;
 
     .card-loading-indicator-icon {
-      font-size: clamp(18px, 1.3em, 20px);
+      font-size: 20px;
       animation: card-loading-indicator-spin 0.9s linear infinite;
     }
   }

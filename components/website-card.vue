@@ -287,7 +287,7 @@ watch(
   }
 
   &[variant='preview'] {
-    font-size: calc(v-bind(cardRem));
+    font-size: 1em;
     pointer-events: none;
     transition: none;
 

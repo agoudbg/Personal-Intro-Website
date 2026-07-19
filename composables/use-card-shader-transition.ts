@@ -343,7 +343,8 @@ export const useCardShaderTransition = () => {
     element: HTMLElement,
   ): FrozenPreviewSnapshot | null => {
     const rect = toCardTransitionRect(element.getBoundingClientRect());
-    const naturalWidth = element.offsetWidth;
+    const naturalWidth = element.querySelector<HTMLElement>('.card-content')?.offsetWidth
+      ?? element.offsetWidth;
     const textureUrl = blurred.value.src;
 
     if (!isUsableRect(rect) || !Number.isFinite(naturalWidth) || naturalWidth <= 0) return null;

@@ -415,7 +415,8 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
       const detailContainerRect = detailContainer.getBoundingClientRect();
       const sourcePreviewCardRect = originalPreviewCardRect;
-      const animationCardNaturalWidth = animationCardElement.offsetWidth;
+      const animationCardNaturalWidth = animationCardElement.querySelector<HTMLElement>('.card-content')?.offsetWidth
+        ?? animationCardElement.offsetWidth;
       const isRectUsable = (rect: { width: number; height: number }) => Number.isFinite(rect.width) && Number.isFinite(rect.height) && rect.width > 0 && rect.height > 0;
       if (!isRectUsable(detailContainerRect) || !isRectUsable(sourcePreviewCardRect) || animationCardNaturalWidth <= 0) {
         resetAnimationArtifacts();

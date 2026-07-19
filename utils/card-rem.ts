@@ -1,12 +1,14 @@
-// Auto calculate the card root em
+// Keep preview content on one design canvas and scale the canvas with the card.
 
-export const slideMode = ref(2);
+export const PREVIEW_CARD_DESIGN_SIZE = 400;
 
-export const cardSize = ref('100px');
-export const cardRem = ref('1rem');
+export const slideMode = shallowRef(2);
 
-function getCardRem() {
-  const { clientWidth, clientHeight } = document.documentElement;
+export const cardSize = shallowRef('100px');
+export const cardScale = shallowRef(100 / PREVIEW_CARD_DESIGN_SIZE);
+
+function updateCardMetrics() {
+  const { clientWidth } = document.documentElement;
 
   let cardWidth = clientWidth - 40;
 
@@ -25,9 +27,9 @@ function getCardRem() {
   }
 
   cardSize.value = `${cardWidth}px`;
-  cardRem.value = `${cardWidth / 400}rem`;
+  cardScale.value = cardWidth / PREVIEW_CARD_DESIGN_SIZE;
 }
 
-getCardRem();
+updateCardMetrics();
 
-window.addEventListener('resize', getCardRem);
+window.addEventListener('resize', updateCardMetrics);
