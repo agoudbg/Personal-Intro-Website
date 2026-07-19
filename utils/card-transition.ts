@@ -1,6 +1,8 @@
 export type CardTransitionDirection = 'open' | 'close';
 export type CardTransitionPhase = 'idle' | 'opening-await-detail' | 'opening-running' | 'closing-running';
 
+export const DETAIL_CARD_BORDER_RADIUS_PX = 32;
+
 export interface CardTransitionRect {
   left: number;
   top: number;

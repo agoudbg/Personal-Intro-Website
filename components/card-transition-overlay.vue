@@ -6,6 +6,7 @@ import {
   getCardTransitionEasing,
   pauseMicaTracking,
 } from '#imports';
+import { DETAIL_CARD_BORDER_RADIUS_PX } from '~/utils/card-transition';
 import { CardTransitionMicaRenderer } from '~/utils/card-transition-mica-renderer';
 import type {
   CardTransitionBorderRadii,
@@ -151,10 +152,10 @@ const createPreviewBorderRadii = (rect: CardTransitionRect) => createBorderRadii
 );
 
 const createDetailBorderRadii = (slideMode: CardTransitionRequest['slideMode']) => {
-  const bottomRadius = slideMode === 2 ? 20 : 0;
+  const bottomRadius = slideMode === 2 ? DETAIL_CARD_BORDER_RADIUS_PX : 0;
   return createBorderRadii(
-    createCornerRadius(20, 20),
-    createCornerRadius(20, 20),
+    createCornerRadius(DETAIL_CARD_BORDER_RADIUS_PX, DETAIL_CARD_BORDER_RADIUS_PX),
+    createCornerRadius(DETAIL_CARD_BORDER_RADIUS_PX, DETAIL_CARD_BORDER_RADIUS_PX),
     createCornerRadius(bottomRadius, bottomRadius),
     createCornerRadius(bottomRadius, bottomRadius),
   );
@@ -248,12 +249,12 @@ const updateFrameBorderRadii = (
 ) => {
   const previewRadiusX = previewRect.width * 0.075;
   const previewRadiusY = previewRect.height * 0.075;
-  const bottomDetailRadius = slideMode === 2 ? 20 : 0;
+  const bottomDetailRadius = slideMode === 2 ? DETAIL_CARD_BORDER_RADIUS_PX : 0;
 
-  radii.topLeft.x = lerp(previewRadiusX, 20, geometryProgress);
-  radii.topLeft.y = lerp(previewRadiusY, 20, geometryProgress);
-  radii.topRight.x = lerp(previewRadiusX, 20, geometryProgress);
-  radii.topRight.y = lerp(previewRadiusY, 20, geometryProgress);
+  radii.topLeft.x = lerp(previewRadiusX, DETAIL_CARD_BORDER_RADIUS_PX, geometryProgress);
+  radii.topLeft.y = lerp(previewRadiusY, DETAIL_CARD_BORDER_RADIUS_PX, geometryProgress);
+  radii.topRight.x = lerp(previewRadiusX, DETAIL_CARD_BORDER_RADIUS_PX, geometryProgress);
+  radii.topRight.y = lerp(previewRadiusY, DETAIL_CARD_BORDER_RADIUS_PX, geometryProgress);
   radii.bottomRight.x = lerp(previewRadiusX, bottomDetailRadius, geometryProgress);
   radii.bottomRight.y = lerp(previewRadiusY, bottomDetailRadius, geometryProgress);
   radii.bottomLeft.x = lerp(previewRadiusX, bottomDetailRadius, geometryProgress);

@@ -19,10 +19,13 @@ import {
 import Friends from '~/components/preview/friends.vue';
 import Blog from '~/components/preview/blog.vue';
 import Programs from '~/components/preview/programs.vue';
+import { DETAIL_CARD_BORDER_RADIUS_PX } from '~/utils/card-transition';
 
 useHead({
   title: '关于 agou',
 });
+
+const detailCardBorderRadius = `${DETAIL_CARD_BORDER_RADIUS_PX}px`;
 
 const { isRefreshing: isBlogArticlesRefreshing } = useBlogArticles();
 
@@ -425,6 +428,8 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
 
       // get the original card's opacity
       const originalCardOpacity = getElementOpacity(originalPreviewCard);
+      const originalPreviewCardBorderRadius = getComputedStyle(originalPreviewCard).borderRadius;
+      const detailContainerBorderRadius = getComputedStyle(detailContainer).borderRadius;
 
       const px = (n: number) => `${n}px`;
 
@@ -437,7 +442,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         height: px(sourcePreviewCardRect.height),
         backgroundColor: 'var(--preview-card-background-color)',
         opacity: originalCardOpacity,
-        // borderRadius: originalPreviewCard.style.borderRadius,
+        borderRadius: originalPreviewCardBorderRadius,
       };
 
       const animationCardMiddle = {
@@ -458,7 +463,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         transform: 'rotate3d(0, 1, 0, 180deg)',
         backgroundColor: 'var(--preview-card-background-color)',
         opacity: 0,
-        // borderRadius: detailContainer.style.borderRadius,
+        borderRadius: detailContainerBorderRadius,
       };
 
       // scale card content to keep the same size as detail container
@@ -498,6 +503,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         height: px(sourcePreviewCardRect.height),
         transform: 'rotate3d(0, 1, 0, 180deg)',
         opacity: 0,
+        borderRadius: originalPreviewCardBorderRadius,
       };
 
       const detailContainerMiddle = {
@@ -517,6 +523,7 @@ const routerChange = async function (e: 'b' | 'a', to: RouteLocationNormalizedGe
         height: px(detailContainerRect.height),
         transform: 'rotate3d(0, 1, 0, 0deg)',
         opacity: 1,
+        borderRadius: detailContainerBorderRadius,
       };
 
       // scale detail content to keep the same size as original preview card
@@ -983,7 +990,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     padding: 0;
     z-index: 99;
     overflow: hidden;
-    border-radius: 20px 20px 0 0;
+    border-radius: v-bind(detailCardBorderRadius) v-bind(detailCardBorderRadius) 0 0;
     transition: all 0.4s;
     pointer-events: all;
 
@@ -1002,7 +1009,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
       top: 50%;
       width: 700px;
       height: min(800px, calc(var(--app-viewport-height) - 100px));
-      border-radius: 20px;
+      border-radius: v-bind(detailCardBorderRadius);
     }
 
     .detail-nuxt-page {
