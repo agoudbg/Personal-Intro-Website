@@ -93,6 +93,8 @@ const overlay = useTemplateRef<HTMLElement>('overlay');
 const canvas = useTemplateRef<HTMLCanvasElement>('canvas');
 const shell = useTemplateRef<HTMLElement>('shell');
 const shadow = useTemplateRef<HTMLElement>('shadow');
+const attachedSurface = useTemplateRef<HTMLElement>('attached-surface');
+const attachedSurfaceTexture = useTemplateRef<HTMLImageElement>('attached-surface-texture');
 const frontFace = useTemplateRef<HTMLElement>('front-face');
 const backFace = useTemplateRef<HTMLElement>('back-face');
 const frontMount = useTemplateRef<HTMLElement>('front-mount');
@@ -219,6 +221,24 @@ const mixFrame = (
   previewTranslateY: lerp(source.previewTranslateY, target.previewTranslateY, progress),
   detailScale: lerp(source.detailScale, target.detailScale, progress),
 });
+
+const normalizePreviewOvershoot = (
+  frame: TransitionFrame,
+  previewRect: CardTransitionRect,
+) => {
+  if (frame.geometryProgress >= 0) return;
+
+  // Extrapolating width and height independently distorts the preview after the
+  // close easing crosses its endpoint. Keep the rebound as a uniform card scale.
+  const scale = frame.rect.width / previewRect.width;
+  const centerX = frame.rect.left + frame.rect.width / 2;
+  const centerY = frame.rect.top + frame.rect.height / 2;
+  frame.rect.width = previewRect.width * scale;
+  frame.rect.height = previewRect.height * scale;
+  frame.rect.left = centerX - frame.rect.width / 2;
+  frame.rect.top = centerY - frame.rect.height / 2;
+  frame.previewTranslateY = 0;
+};
 
 const updateClosePreviewTarget = (run: InternalRun) => {
   if (run.request.direction !== 'close' || !run.request.previewElement.isConnected) return;
@@ -396,12 +416,17 @@ const resetInlineStyles = () => {
     shell.value.style.height = '';
     shell.value.style.transform = '';
   }
+  if (canvas.value) canvas.value.style.opacity = '';
   if (shadow.value) {
     shadow.value.style.opacity = '';
     shadow.value.style.transform = '';
     shadow.value.style.borderRadius = '';
     shadow.value.style.boxShadow = '';
   }
+  if (attachedSurface.value) {
+    attachedSurface.value.style.borderRadius = '';
+  }
+  if (attachedSurfaceTexture.value) attachedSurfaceTexture.value.style.transform = '';
   if (frontFace.value) {
     frontFace.value.style.opacity = '';
     frontFace.value.style.transform = '';
@@ -509,18 +534,33 @@ const prepareRenderer = async (
   return renderer;
 };
 
+const configureAttachedSurfaceTexture = (request: CardTransitionRequest) => {
+  const textureElement = attachedSurfaceTexture.value;
+  if (!textureElement) throw new Error('The attached card transition surface is not mounted.');
+
+  textureElement.src = request.textureUrl;
+  textureElement.style.width = `${request.viewport.width + MICA_TEXTURE_BLEED_PX * 2}px`;
+  textureElement.style.height = `${request.viewport.height + MICA_TEXTURE_BLEED_PX * 2}px`;
+};
+
 const applyDomFrame = (
   run: InternalRun,
   frame: TransitionFrame,
   opacities: FaceOpacities,
 ) => {
   const shellElement = shell.value;
+  const canvasElement = canvas.value;
   const shadowElement = shadow.value;
+  const attachedSurfaceElement = attachedSurface.value;
+  const attachedSurfaceTextureElement = attachedSurfaceTexture.value;
   const frontFaceElement = frontFace.value;
   const backFaceElement = backFace.value;
   if (
     !shellElement
+    || !canvasElement
     || !shadowElement
+    || !attachedSurfaceElement
+    || !attachedSurfaceTextureElement
     || !frontFaceElement
     || !backFaceElement
   ) return;
@@ -541,10 +581,20 @@ const applyDomFrame = (
   const horizontalClipInset = Math.max(0, (frame.rect.width - projectedWidth) / 2);
   const borderRadius = toCssBorderRadius(run.frameBorderRadii);
   const projectedBorderRadius = toCssBorderRadius(run.frameBorderRadii, domProjectionScale);
+  const textureInverseScaleX = 1 / domProjectionScale;
+  const projectedLeft = frame.rect.left + horizontalClipInset;
+  const textureTranslateX = (
+    -projectedLeft - MICA_TEXTURE_BLEED_PX
+  ) * textureInverseScaleX;
+  const textureTranslateY = -frame.rect.top - MICA_TEXTURE_BLEED_PX;
+
+  canvasElement.style.opacity = `${opacities.detailMix}`;
   shadowElement.style.transform = projection;
   shadowElement.style.opacity = `${clampUnit(run.request.sourceOpacity) * (1 - smoothstep(0.15, 0.75, frame.geometryProgress))}`;
   shadowElement.style.borderRadius = borderRadius;
   shadowElement.style.boxShadow = run.request.sourceBoxShadow;
+  attachedSurfaceElement.style.borderRadius = borderRadius;
+  attachedSurfaceTextureElement.style.transform = `matrix(${textureInverseScaleX}, 0, 0, 1, ${textureTranslateX}, ${textureTranslateY})`;
   frontFaceElement.style.transform = projection;
   frontFaceElement.style.opacity = `${opacities.preview}`;
   backFaceElement.style.opacity = `${opacities.detail}`;
@@ -553,7 +603,8 @@ const applyDomFrame = (
   backFaceElement.style.clipPath = detailClipPath;
   backFaceElement.style.setProperty('-webkit-clip-path', detailClipPath);
 
-  run.previewContentElement.style.transform = `scale(${frame.previewScale}) translateY(${frame.previewTranslateY}px)`;
+  const previewTranslateY = Math.max(0, frame.previewTranslateY);
+  run.previewContentElement.style.transform = `scale(${frame.previewScale}) translateY(${previewTranslateY}px)`;
   run.detailLayoutElement.style.transform = `translateX(-50%) scale(${frame.detailScale}) scaleX(${domProjectionScale})`;
 };
 
@@ -565,6 +616,7 @@ const applyFrame = (run: InternalRun, rawProgress: number) => {
     run.request.direction === 'open' ? 1 : 0,
   );
   const frame = mixFrame(run.startFrame, targetFrame, easedProgress);
+  normalizePreviewOvershoot(frame, run.request.previewRect);
   const opacities = getFaceOpacities(
     frame.geometryProgress,
     run.request.sourceOpacity,
@@ -742,9 +794,17 @@ const start = async (request: CardTransitionRequest): Promise<CardTransitionRun>
 
   const overlayElement = overlay.value;
   const canvasElement = canvas.value;
-  if (!overlayElement || !canvasElement || !frontMount.value || !backMount.value) {
+  if (
+    !overlayElement
+    || !canvasElement
+    || !attachedSurface.value
+    || !attachedSurfaceTexture.value
+    || !frontMount.value
+    || !backMount.value
+  ) {
     throw new Error('Card transition overlay is not mounted.');
   }
+  configureAttachedSurfaceTexture(request);
 
   const done = createDeferred<undefined>();
   const abortController = new AbortController();
@@ -928,6 +988,14 @@ defineExpose<CardTransitionOverlayApi>({ start, cancel });
         <div ref="shadow" class="transition-shadow" />
         <div class="transition-rotator">
           <div ref="front-face" class="transition-face front-face">
+            <div ref="attached-surface" class="attached-surface">
+              <img
+                ref="attached-surface-texture"
+                class="attached-surface-texture"
+                alt=""
+                aria-hidden="true"
+              >
+            </div>
             <div class="front-positioner">
               <div ref="front-mount" class="frozen-mount front-mount" />
             </div>
@@ -969,6 +1037,7 @@ defineExpose<CardTransitionOverlayApi>({ start, cancel });
 .transition-rotator,
 .transition-face,
 .transition-shadow,
+.attached-surface,
 .back-clip {
   position: absolute;
   inset: 0;
@@ -985,6 +1054,25 @@ defineExpose<CardTransitionOverlayApi>({ start, cancel });
   transform-origin: center;
   pointer-events: none;
   will-change: transform, opacity;
+}
+
+.attached-surface {
+  overflow: hidden;
+  background-color: var(--color-surface-mica);
+  backface-visibility: hidden;
+  contain: paint;
+}
+
+.attached-surface-texture {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  max-width: none;
+  opacity: 0.2;
+  transform-origin: top left;
+  pointer-events: none;
+  will-change: transform;
 }
 
 .transition-face {
