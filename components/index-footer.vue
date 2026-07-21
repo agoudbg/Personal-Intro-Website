@@ -6,6 +6,14 @@ import { cardSize } from '#imports';
   <div class="footer">
     <div class="text">
       <p>&copy; 2021-2025 agou.im.</p>
+      <p>
+        <a
+          class="filing-link"
+          href="https://icp.gov.moe/?keyword=20225229"
+          target="_blank"
+          rel="noopener noreferrer"
+        >萌ICP备20225229号</a>
+      </p>
     </div>
   </div>
 </template>
@@ -20,9 +28,13 @@ import { cardSize } from '#imports';
 
   .text {
     font-size: 14px;
-    color: var(--color-text-tertiary);
+    color: var(--color-text-secondary);
     text-align: center;
-    line-height: 50px;
+    line-height: 24px;
+  }
+
+  .filing-link {
+    color: inherit;
   }
 
 }
