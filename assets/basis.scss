@@ -1,0 +1,53 @@
+:root {
+  --app-viewport-height: 100vh;
+  --font-family: 'PingFang SC', Microsoft Yahei, HanHei SC, Arial, 'San Francisco', system-ui, sans-serif;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-viewport-height: 100dvh;
+  }
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  line-height: 1.21;
+  background-color: var(--color-background-page);
+  color: var(--color-text-primary);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: none;
+  text-decoration: none;
+  scrollbar-width: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-family);
+  line-height: inherit;
+}
+
+a {
+  color: var(--color-text-primary);
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 0px;
+}
+
+::selection {
+  background: var(--color-selection-background);
+  color: var(--color-selection-text);
+}
