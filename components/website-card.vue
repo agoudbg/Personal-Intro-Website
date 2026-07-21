@@ -23,11 +23,9 @@
 </template>
 
 <script lang="ts" setup>
-import { convertDarkIcon } from 'dark-icon-generator/browser';
-
 export interface WebsiteCardProps {
   iconUrl?: string;
-  autoDark?: boolean;
+  darkIconUrl?: string;
   name: string;
   description: string;
   host?: string;
@@ -42,10 +40,10 @@ const props = defineProps({
     required: false,
     default: '',
   },
-  autoDark: {
-    type: Boolean,
+  darkIconUrl: {
+    type: String,
     required: false,
-    default: true,
+    default: '',
   },
   name: {
     type: String,
@@ -80,61 +78,11 @@ const linkText = computed(() => {
   return props.host || new URL(props.link).host;
 });
 
-const icon = shallowRef(props.iconUrl);
-
-const loadIcon = (source: string): Promise<HTMLImageElement> => {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = 'Anonymous';
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(`Failed to load icon: ${source}`));
-    image.src = source;
-  });
-};
-
-const readBlobAsDataUrl = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-        return;
-      }
-      reject(new Error('Dark icon conversion returned an invalid data URL.'));
-    };
-    reader.onerror = () => reject(reader.error ?? new Error('Failed to read the converted dark icon.'));
-    reader.readAsDataURL(blob);
-  });
-};
-
-watch(
-  [theme, () => props.iconUrl, () => props.autoDark],
-  async ([currentTheme], _previousValues, onCleanup) => {
-    let cancelled = false;
-    onCleanup(() => {
-      cancelled = true;
-    });
-
-    if (currentTheme === 'light' || !props.autoDark || !props.iconUrl) {
-      icon.value = props.iconUrl;
-      return;
-    }
-
-    try {
-      const sourceImage = await loadIcon(props.iconUrl);
-      const darkIcon = await convertDarkIcon(sourceImage);
-      const dataUrl = await readBlobAsDataUrl(darkIcon);
-      if (!cancelled) icon.value = dataUrl;
-    } catch (error: unknown) {
-      console.error('Failed to generate a dark website icon.', {
-        iconUrl: props.iconUrl,
-        error,
-      });
-      if (!cancelled) icon.value = props.iconUrl;
-    }
-  },
-  { immediate: true },
-);
+const icon = computed(() => {
+  return theme.value === 'dark' && props.darkIconUrl
+    ? props.darkIconUrl
+    : props.iconUrl;
+});
 
 </script>
 

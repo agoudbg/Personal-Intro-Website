@@ -3,7 +3,7 @@
     <div class="content">
       <div class="friends-list">
         <WebsiteCard v-for="friend in friends" :key="friend.link" class="item" :icon-url="friend.iconUrl"
-          :auto-dark="friend.autoDark" :name="friend.name" :description="friend.description" :host="friend.host"
+          :dark-icon-url="friend.darkIconUrl" :name="friend.name" :description="friend.description" :host="friend.host"
           :link-action-text="friend.linkActionText" :link="friend.link" />
       </div>
     </div>

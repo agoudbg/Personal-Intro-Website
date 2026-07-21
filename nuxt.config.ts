@@ -1,3 +1,11 @@
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { generateDarkIcons } from './build/generate-dark-icons';
+
+const rootDirectory = dirname(fileURLToPath(import.meta.url));
+const darkIconsDirectory = resolve(rootDirectory, '.nuxt/dark-icons');
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
@@ -19,11 +27,16 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/scripts',
   ],
+  alias: {
+    '@dark-icons': darkIconsDirectory,
+  },
   build: {
     transpile: [
       'scroll-slides',
-      'dark-icon-generator/browser',
     ],
+  },
+  hooks: {
+    'build:before': () => generateDarkIcons(rootDirectory, darkIconsDirectory),
   },
 
   icon: {

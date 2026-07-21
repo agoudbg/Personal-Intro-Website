@@ -1,5 +1,6 @@
 import type { WebsiteCardProps } from '~/components/website-card.vue';
 
+import calandDarkIcon from '@dark-icons/caland-favicon-dark.png';
 import calandIcon from '~/assets/icons/caland-favicon.png';
 import cosixIcon from '~/assets/icons/cosix-avatar.jpg';
 import cold04Icon from '~/assets/icons/cold04-avatar.png';
@@ -15,7 +16,6 @@ const linkActionText = '访问';
 export const friends: WebsiteCardProps[] = [
   {
     iconUrl: zhicccIcon,
-    autoDark: false,
     name: "Air's home",
     description: '一个奇奇怪怪，啥都有的网站',
     host: 'zhiccc.net',
@@ -24,7 +24,6 @@ export const friends: WebsiteCardProps[] = [
   },
   {
     iconUrl: revincxIcon,
-    autoDark: false,
     name: 'Revincx',
     description: '可爱就是正义~',
     host: 'revincx.icu',
@@ -33,7 +32,6 @@ export const friends: WebsiteCardProps[] = [
   },
   {
     iconUrl: shiinaIcon,
-    autoDark: false,
     name: "SHIINA'S HOME",
     description: '这里是 Shiina 的小网站',
     host: 'shiinafan.top',
@@ -42,6 +40,7 @@ export const friends: WebsiteCardProps[] = [
   },
   {
     iconUrl: calandIcon,
+    darkIconUrl: calandDarkIcon,
     name: 'CALand',
     description: '一个基于 VitePress 的博客',
     host: 'land.cody.ee',
@@ -50,7 +49,6 @@ export const friends: WebsiteCardProps[] = [
   },
   {
     iconUrl: hatsBlogIcon,
-    autoDark: false,
     name: "Hat's Blog 帽之岛",
     description: '欢迎来到帽之岛，这是一座充满了个人思考和创意想法的小岛。',
     host: 'www.hats-land.com',
@@ -59,7 +57,6 @@ export const friends: WebsiteCardProps[] = [
   },
   {
     iconUrl: cold04Icon,
-    autoDark: false,
     name: '酷丁的主页',
     description: '一个笨蛋的主页',
     host: 'cold04.com',
@@ -68,7 +65,6 @@ export const friends: WebsiteCardProps[] = [
   },
   {
     iconUrl: oneTwoOneIcon,
-    autoDark: false,
     name: '1212967',
     description: '一个屑个人博客',
     host: '1212967.xyz',
@@ -77,7 +73,6 @@ export const friends: WebsiteCardProps[] = [
   },
   {
     iconUrl: gelithIcon,
-    autoDark: false,
     name: 'gelith的个人主页',
     description: '一个热爱计算机的青年',
     host: 'www.gelith.top',
@@ -86,7 +81,6 @@ export const friends: WebsiteCardProps[] = [
   },
   {
     iconUrl: cosixIcon,
-    autoDark: false,
     name: '东方众的不知名小站',
     description: '呐呐呐，你也喜欢二次元？',
     host: 'cosix.xyz',

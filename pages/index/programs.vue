@@ -3,7 +3,7 @@
     <div class="content">
       <div class="programs-list">
         <WebsiteCard v-for="program in programs" :key="program.link" class="item" :icon-url="program.iconUrl"
-          :auto-dark="program.autoDark" :name="program.name" :description="program.description" :host="program.host"
+          :dark-icon-url="program.darkIconUrl" :name="program.name" :description="program.description" :host="program.host"
           :link-action-text="program.linkActionText" :link="program.link" />
       </div>
     </div>
