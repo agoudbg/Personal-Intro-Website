@@ -25,7 +25,9 @@ useHead({
   title: '关于 agou',
 });
 
-const detailCardBorderRadius = `${DETAIL_CARD_BORDER_RADIUS_PX}px`;
+const detailContainerStyle = {
+  '--detail-card-border-radius': `${DETAIL_CARD_BORDER_RADIUS_PX}px`,
+};
 
 const { isRefreshing: isBlogArticlesRefreshing } = useBlogArticles();
 
@@ -826,6 +828,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     </div>
     <div class="animations-container">
       <div
+        :style="detailContainerStyle"
         :class="`detail-container m-${slideMode} ${router.currentRoute.value.name !== 'index' ? '' : 'hide'} ${isDetailAnimationPreparing ? 'preparing' : ''}`">
         <NuxtPage class="detail-nuxt-page" />
       </div>
@@ -1012,7 +1015,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
     padding: 0;
     z-index: 99;
     overflow: hidden;
-    border-radius: v-bind(detailCardBorderRadius) v-bind(detailCardBorderRadius) 0 0;
+    border-radius: var(--detail-card-border-radius) var(--detail-card-border-radius) 0 0;
     transition: all 0.4s;
     pointer-events: all;
 
@@ -1031,7 +1034,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
       top: 50%;
       width: 700px;
       height: min(800px, calc(var(--app-viewport-height) - 100px));
-      border-radius: v-bind(detailCardBorderRadius);
+      border-radius: var(--detail-card-border-radius);
     }
 
     .detail-nuxt-page {
