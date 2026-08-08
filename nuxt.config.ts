@@ -11,6 +11,18 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
 
+  app: {
+    head: {
+      script: [
+        {
+          src: 'https://a.nmteam.top/script.js',
+          defer: true,
+          'data-website-id': '3108a173-77d4-4fe9-97e2-13d5cadef798',
+        },
+      ],
+    },
+  },
+
   runtimeConfig: {
     blogFeedUrl: process.env.NUXT_BLOG_FEED_URL || (
       process.env.NODE_ENV === 'production'
