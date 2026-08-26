@@ -801,7 +801,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
               </div>
             </div>
             <div v-else>
-              <IndexFooter />
+              <IndexFooter class="slide-footer" />
             </div>
           </template>
 
@@ -810,7 +810,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
               <PreviewBlog :loading="cardLoadingIndicatorId === 'blog'" />
             </div>
             <div v-else>
-              <IndexFooter />
+              <IndexFooter class="slide-footer" />
             </div>
           </template>
 
@@ -821,7 +821,7 @@ const getElementOpacity = (element: HTMLElement | null): number => {
           </template>
 
           <template #item-5>
-            <IndexFooter />
+            <IndexFooter class="slide-footer" />
           </template>
         </ScrollSlide>
       </div>
@@ -964,10 +964,15 @@ const getElementOpacity = (element: HTMLElement | null): number => {
       }
     }
 
+    .slide-footer {
+      transition: opacity 0.4s, visibility 0s, filter 0.4s;
+    }
+
     &.hide {
       // transform: scale(calc(0.96));
 
-      .slide-item {
+      .slide-item,
+      .slide-footer {
         opacity: 0;
         visibility: hidden;
         filter: blur(12px);
