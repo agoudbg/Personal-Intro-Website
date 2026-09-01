@@ -5,6 +5,27 @@ import { generateDarkIcons } from './build/generate-dark-icons';
 
 const rootDirectory = dirname(fileURLToPath(import.meta.url));
 const darkIconsDirectory = resolve(rootDirectory, '.nuxt/dark-icons');
+const siteUrl = 'https://agou.im';
+const siteTitle = 'agou | 阿狗的个人网站';
+const siteDescription = 'agou（阿狗 / agoudbg）的个人网站，介绍、博客、项目网站与社交链接。';
+const personStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  name: siteTitle,
+  url: `${siteUrl}/`,
+  mainEntity: {
+    '@type': 'Person',
+    name: 'agou',
+    alternateName: ['阿狗', 'agoudbg'],
+    url: `${siteUrl}/`,
+    image: `${siteUrl}/avatar.png`,
+    sameAs: [
+      'https://github.com/agoudbg',
+      'https://t.me/agoudbg',
+      'https://twitter.com/agoudbg',
+    ],
+  },
+};
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -13,7 +34,30 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      title: siteTitle,
+      meta: [
+        { name: 'description', content: siteDescription },
+        { name: 'author', content: 'agou' },
+        { name: 'robots', content: 'index, follow' },
+        { property: 'og:type', content: 'profile' },
+        { property: 'og:url', content: `${siteUrl}/` },
+        { property: 'og:title', content: siteTitle },
+        { property: 'og:description', content: siteDescription },
+        { property: 'og:site_name', content: 'agou.im' },
+        { property: 'og:image', content: `${siteUrl}/avatar.png` },
+        { name: 'twitter:card', content: 'summary' },
+        { name: 'twitter:title', content: siteTitle },
+        { name: 'twitter:description', content: siteDescription },
+        { name: 'twitter:image', content: `${siteUrl}/avatar.png` },
+      ],
+      link: [
+        { rel: 'canonical', href: `${siteUrl}/` },
+      ],
       script: [
+        {
+          type: 'application/ld+json',
+          children: JSON.stringify(personStructuredData),
+        },
         {
           src: 'https://a.nmteam.top/script.js',
           defer: true,
