@@ -1,1 +1,4 @@
+User-agent: *
+Allow: /
 
+Sitemap: https://agou.im/sitemap.xml
