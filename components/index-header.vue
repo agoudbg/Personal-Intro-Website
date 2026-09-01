@@ -5,7 +5,7 @@
 <template>
   <div class="header">
     <div class="icon" />
-    <div class="name">agou</div>
+    <h1 class="name">agou</h1>
   </div>
 </template>
 
@@ -28,6 +28,7 @@
   }
 
   .name {
+    margin: 0;
     font-size: 24px;
     font-weight: bold;
     color: var(--color-text-primary);
