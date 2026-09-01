@@ -6,12 +6,13 @@ import { generateDarkIcons } from './build/generate-dark-icons';
 const rootDirectory = dirname(fileURLToPath(import.meta.url));
 const darkIconsDirectory = resolve(rootDirectory, '.nuxt/dark-icons');
 const siteUrl = 'https://agou.im';
-const siteTitle = 'agou | 阿狗的个人网站';
+const siteTitle = '关于 agou';
+const searchTitle = '关于 agou | 阿狗的主页 | 阿狗个人网站 | agoudbg';
 const siteDescription = 'agou（阿狗 / agoudbg）的个人网站，介绍、博客、项目网站与社交链接。';
 const personStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'ProfilePage',
-  name: siteTitle,
+  name: searchTitle,
   url: `${siteUrl}/`,
   mainEntity: {
     '@type': 'Person',
@@ -41,12 +42,12 @@ export default defineNuxtConfig({
         { name: 'robots', content: 'index, follow' },
         { property: 'og:type', content: 'profile' },
         { property: 'og:url', content: `${siteUrl}/` },
-        { property: 'og:title', content: siteTitle },
+        { property: 'og:title', content: searchTitle },
         { property: 'og:description', content: siteDescription },
         { property: 'og:site_name', content: 'agou.im' },
         { property: 'og:image', content: `${siteUrl}/avatar.png` },
         { name: 'twitter:card', content: 'summary' },
-        { name: 'twitter:title', content: siteTitle },
+        { name: 'twitter:title', content: searchTitle },
         { name: 'twitter:description', content: siteDescription },
         { name: 'twitter:image', content: `${siteUrl}/avatar.png` },
       ],

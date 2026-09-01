@@ -22,17 +22,18 @@ import Programs from '~/components/preview/programs.vue';
 import { DETAIL_CARD_BORDER_RADIUS_PX } from '~/utils/card-transition';
 
 const siteDescription = 'agou（阿狗 / agoudbg）的个人网站，介绍、博客、项目网站与社交链接。';
+const searchTitle = '关于 agou | 阿狗的主页 | 阿狗个人网站 | agoudbg';
 
 useSeoMeta({
-  title: 'agou | 阿狗的个人网站',
+  title: '关于 agou',
   description: siteDescription,
   ogType: 'profile',
   ogUrl: 'https://agou.im/',
-  ogTitle: 'agou | 阿狗的个人网站',
+  ogTitle: searchTitle,
   ogDescription: siteDescription,
   ogImage: 'https://agou.im/avatar.png',
   twitterCard: 'summary',
-  twitterTitle: 'agou | 阿狗的个人网站',
+  twitterTitle: searchTitle,
   twitterDescription: siteDescription,
   twitterImage: 'https://agou.im/avatar.png',
 });
