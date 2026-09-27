@@ -5,7 +5,7 @@ import { cardSize } from '#imports';
 <template>
   <div class="footer">
     <div class="text">
-      <p>&copy; 2021-2025 agou.im.</p>
+      <p>&copy; 2021-2026 agou.im.</p>
       <p>
         <a
           class="filing-link"
