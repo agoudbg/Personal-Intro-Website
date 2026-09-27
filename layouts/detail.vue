@@ -103,22 +103,28 @@ onBeforeUnmount(() => {
     }
 
     .close-button {
+      box-sizing: border-box;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 32px;
-      height: 32px;
-      flex: 0 0 32px;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 36px;
       position: relative;
       z-index: 1;
-      margin: 0 14px 0 12px;
+      margin: 0 12px;
       font-size: 24px;
       color: var(--color-text-primary);
+      background-color: var(--color-surface-hover);
+      border: 2px solid color-mix(in srgb, var(--color-border-subtle) 55%, transparent);
+      border-radius: 50%;
       cursor: pointer;
-      transition: color 0.2s;
+      transition: background-color 0.2s, border-color 0.2s;
 
-      &:hover {
-        color: var(--color-text-tertiary);
+      &:hover,
+      &:focus-visible {
+        background-color: var(--color-surface-active);
+        border-color: var(--color-border-subtle);
       }
     }
 
