@@ -33,16 +33,24 @@ const { articles, errorMessage, isLoading, refresh } = useBlogArticles();
 
 <style lang="scss" scoped>
 .blog-link {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  height: 40px;
+  padding: 0 14px;
+  gap: 4px;
   color: var(--color-text-primary);
+  background-color: var(--color-surface-hover);
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 55%, transparent);
+  border-radius: 20px;
   font-size: 15px;
   font-weight: 600;
-  transition: color 0.2s;
+  transition: background-color 0.2s, border-color 0.2s;
 
-  &:hover {
-    color: var(--color-text-tertiary);
+  &:hover,
+  &:focus-visible {
+    background-color: var(--color-surface-active);
+    border-color: var(--color-border-subtle);
   }
 
   :deep(svg) {
