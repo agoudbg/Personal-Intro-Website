@@ -172,3 +172,16 @@ export const toCardTransitionRect = (rect: DOMRectReadOnly): CardTransitionRect 
   width: rect.width,
   height: rect.height,
 });
+
+export const getPreviewCardOpacity = (element: HTMLElement): number => {
+  let opacityElement: HTMLElement | null = element;
+
+  // Read the scroll wrapper: the transition temporarily hides the card itself.
+  while (opacityElement && opacityElement !== document.body) {
+    if (opacityElement.classList.contains('slider-slot')) break;
+    opacityElement = opacityElement.parentElement;
+  }
+
+  const opacity = Number.parseFloat(getComputedStyle(opacityElement ?? element).opacity);
+  return Number.isFinite(opacity) ? Math.min(1, Math.max(0, opacity)) : 1;
+};

@@ -6,7 +6,7 @@ import type {
 } from 'vue-router';
 import { blurred } from '~/utils/background-blurred';
 import { slideMode } from '~/utils/card-rem';
-import { toCardTransitionRect } from '~/utils/card-transition';
+import { getPreviewCardOpacity, toCardTransitionRect } from '~/utils/card-transition';
 import type {
   CardTransitionDirection,
   CardTransitionOverlayApi,
@@ -149,18 +149,6 @@ const isSameViewport = (left: ViewportSnapshot, right: ViewportSnapshot) => (
 const getSlideMode = (): 0 | 1 | 2 => {
   const value = slideMode.value;
   return value === 0 || value === 1 ? value : 2;
-};
-
-const getSourceOpacity = (element: HTMLElement): number => {
-  let opacityElement: HTMLElement | null = element;
-
-  while (opacityElement && opacityElement !== document.body) {
-    if (opacityElement.classList.contains('slider-slot')) break;
-    opacityElement = opacityElement.parentElement;
-  }
-
-  const opacity = Number.parseFloat(getComputedStyle(opacityElement ?? element).opacity);
-  return Number.isFinite(opacity) ? Math.min(1, Math.max(0, opacity)) : 1;
 };
 
 const getNavigationKey = (
@@ -355,7 +343,7 @@ export const useCardShaderTransition = () => {
       element,
       rect,
       naturalWidth,
-      sourceOpacity: getSourceOpacity(element),
+      sourceOpacity: getPreviewCardOpacity(element),
       sourceBoxShadow: getComputedStyle(element).boxShadow,
       slideMode: getSlideMode(),
       textureUrl,
@@ -535,7 +523,7 @@ export const useCardShaderTransition = () => {
       ...snapshot,
       element: previewElement,
       rect: previewRect,
-      sourceOpacity: getSourceOpacity(previewElement),
+      sourceOpacity: getPreviewCardOpacity(previewElement),
       sourceBoxShadow: getComputedStyle(previewElement).boxShadow,
       slideMode: getSlideMode(),
       textureUrl,
@@ -556,7 +544,7 @@ export const useCardShaderTransition = () => {
         previewRect,
         detailRect,
         previewNaturalWidth: snapshot.naturalWidth,
-        sourceOpacity: getSourceOpacity(previewElement),
+        sourceOpacity: getPreviewCardOpacity(previewElement),
         sourceBoxShadow: getComputedStyle(previewElement).boxShadow,
         slideMode: getSlideMode(),
         textureUrl,

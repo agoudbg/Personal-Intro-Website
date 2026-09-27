@@ -6,7 +6,7 @@ import {
   getCardTransitionEasing,
   pauseMicaTracking,
 } from '#imports';
-import { DETAIL_CARD_BORDER_RADIUS_PX } from '~/utils/card-transition';
+import { DETAIL_CARD_BORDER_RADIUS_PX, getPreviewCardOpacity } from '~/utils/card-transition';
 import { CardTransitionMicaRenderer } from '~/utils/card-transition-mica-renderer';
 import type {
   CardTransitionBorderRadii,
@@ -243,6 +243,7 @@ const normalizePreviewOvershoot = (
 const updateClosePreviewTarget = (run: InternalRun) => {
   if (run.request.direction !== 'close' || !run.request.previewElement.isConnected) return;
 
+  run.request.sourceOpacity = getPreviewCardOpacity(run.request.previewElement);
   const rect = run.request.previewElement.getBoundingClientRect();
   if (
     !Number.isFinite(rect.left)
