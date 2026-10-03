@@ -2,7 +2,6 @@ import type { WebsiteCardProps } from '~/components/website-card.vue';
 
 import calandDarkIcon from '@dark-icons/caland-favicon-dark.png';
 import calandIcon from '~/assets/icons/caland-favicon.png';
-import cosixIcon from '~/assets/icons/cosix-avatar.jpg';
 import cold04Icon from '~/assets/icons/cold04-avatar.png';
 import gelithIcon from '~/assets/icons/gelith-logo.jpg';
 import hatsBlogIcon from '~/assets/icons/hats-blog.webp';
@@ -78,14 +77,6 @@ export const friends: WebsiteCardProps[] = [
     host: 'www.gelith.top',
     linkActionText,
     link: 'https://www.gelith.top',
-  },
-  {
-    iconUrl: cosixIcon,
-    name: '东方众的不知名小站',
-    description: '呐呐呐，你也喜欢二次元？',
-    host: 'cosix.xyz',
-    linkActionText,
-    link: 'https://cosix.xyz',
   },
 ];
 
