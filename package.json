@@ -21,7 +21,7 @@
     "context-filter-polyfill": "0.3.23",
     "dark-icon-generator": "^1.1.0",
     "eslint": "^9.39.4",
-    "nuxt": "^3.21.11",
+    "nuxt": "^4.6.4",
     "scroll-slides": "^0.3.0",
     "three": "^0.186.1",
     "vue": "^3.5.43",
